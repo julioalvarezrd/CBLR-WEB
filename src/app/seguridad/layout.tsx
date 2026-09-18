@@ -85,7 +85,7 @@ export default async function SecurityLayout({
         <main>{children}</main>
       </div>
 
-      <AppFooter className="border-t border-slate-200 bg-white" />
+      <AppFooter />
     </div>
   );
 }
