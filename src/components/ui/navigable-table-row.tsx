@@ -35,7 +35,7 @@ export function NavigableTableRow({
   return (
     <tr
       onClick={handleClick}
-      className={`cursor-pointer transition-colors hover:bg-slate-50 ${className}`}
+      className={`cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/70 ${className}`}
     >
       {children}
     </tr>
