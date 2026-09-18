@@ -24,7 +24,9 @@ Administración
     └── Permisos
 ~~~
 
-En escritorio se utiliza una barra superior con marca SIBOR, Inicio, áreas de navegación y menú del usuario. Los dropdowns son controlados: clic abre/cierra, clic fuera cierra, Escape cierra y abrir un menú cierra el otro.
+En escritorio se utiliza una barra superior con marca SIBOR, Inicio, áreas de navegación, control de tema y menú del usuario. El control de tema es un icono independiente inmediatamente a la izquierda del usuario.
+
+Los dropdowns son controlados: clic abre/cierra, clic fuera cierra, Escape cierra y abrir un menú cierra el otro.
 
 En móvil se utiliza un menú hamburguesa que abre un panel flotante. Las áreas se expanden con controles `+ / −`; los niveles hijos se muestran indentados con una línea vertical. Seleccionar un destino cierra el panel.
 
@@ -71,15 +73,27 @@ Los formularios agrupan campos relacionados, utilizan labels visibles, mensajes 
 
 ## Temas
 
-SIBOR soporta tres preferencias:
+SIBOR inicia respetando la preferencia del sistema operativo cuando el usuario todavía no ha elegido un tema. El control visible de la aplicación alterna directamente entre Claro y Oscuro y conserva la selección localmente.
 
-- Claro;
-- Oscuro;
-- Sistema.
+El control de tema:
 
-La preferencia se conserva localmente en el navegador. `Sistema` responde a `prefers-color-scheme`. No se utiliza una dependencia externa para esta función.
+- se representa únicamente mediante icono;
+- está situado a la izquierda del círculo del usuario en la cabecera;
+- incluye `aria-label`, `title` y foco visible para accesibilidad;
+- no requiere dependencias externas.
 
-Todo componente compartido nuevo debe definir sus estados claro y oscuro. El rojo SIBOR conserva su función de identidad y acción; los fondos, bordes y textos utilizan escalas neutrales adaptadas al tema.
+Todo componente compartido nuevo debe definir estados claro y oscuro. El rojo SIBOR conserva su función de identidad y acción; fondos, bordes, textos, inputs, hover, focus y disabled deben mantener contraste suficiente en ambos temas.
+
+### Marca en tema oscuro
+
+No se aplican filtros CSS destructivos al logo. La configuración centraliza dos recursos:
+
+~~~text
+public/brand/sibor-logo.png
+public/brand/sibor-logo-dark.png
+~~~
+
+La variante oscura debe conservar el isotipo rojo y utilizar texto claro/blanco. `SiborBrand` selecciona automáticamente la variante según el tema.
 
 ## Responsive
 
