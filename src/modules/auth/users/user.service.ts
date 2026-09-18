@@ -319,6 +319,35 @@ export async function setUserActive(
     );
   }
 
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      roles: {
+        select: {
+          role: {
+            select: {
+              id: true,
+              name: true,
+              isActive: true,
+              permissions: {
+                select: { permissionKey: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!targetUser) {
+    throw new ValidationError("El usuario indicado no existe.");
+  }
+
+  assertCanDelegateRoles(
+    actor,
+    targetUser.roles.map(({ role }) => role),
+  );
+
   await prisma.$transaction(async (tx) => {
     const before = await tx.user.findUnique({
       where: { id: userId },
