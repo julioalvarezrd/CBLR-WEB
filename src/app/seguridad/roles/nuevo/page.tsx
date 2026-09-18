@@ -13,7 +13,7 @@ type NewRolePageProps = {
 export default async function NewRolePage({
   searchParams,
 }: NewRolePageProps) {
-  await requirePagePermission("roles.manage");
+  const context = await requirePagePermission("roles.manage");
   const params = await searchParams;
 
   return (
@@ -84,9 +84,10 @@ export default async function NewRolePage({
                         type="checkbox"
                         name="permissions"
                         value={permission.key}
-                        className="mt-1"
+                        disabled={!context.permissions.has(permission.key)}
+                        className="mt-1 disabled:cursor-not-allowed"
                       />
-                      <span>
+                      <span className={!context.permissions.has(permission.key) ? "opacity-50" : ""}>
                         <span className="font-medium">{permission.label}</span>{" "}
                         <code className="text-xs text-slate-500">
                           {permission.key}
