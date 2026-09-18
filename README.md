@@ -105,15 +105,50 @@ pnpm prisma:studio
 
 Todo cambio futuro de estructura de datos debe realizarse mediante migraciones.
 
-## Auth.js
+## Auth.js y RBAC
 
-Auth.js está conectado al App Router mediante:
+Auth.js utiliza credenciales institucionales y sesiones JWT. Los usuarios se almacenan en PostgreSQL y sus contraseñas se protegen con scrypt usando el módulo crypto de Node.js.
 
-- src/auth.ts
-- src/modules/auth/auth.config.ts
-- src/app/api/auth/[...nextauth]/route.ts
+La autorización no depende del nombre de un rol. Los permisos efectivos se calculan desde roles activos almacenados en la base de datos.
 
-Los proveedores de inicio de sesión, persistencia de usuarios, roles y permisos se incorporarán en una etapa posterior. La configuración actual no crea usuarios ni autoriza operaciones de negocio.
+Estructura principal:
+
+- User: usuario institucional;
+- Role: agrupación dinámica de permisos;
+- Permission: catálogo central de capacidades;
+- UserRole: relación muchos-a-muchos entre usuarios y roles;
+- RolePermission: relación muchos-a-muchos entre roles y permisos;
+- AuditLog: registro de operaciones sensibles.
+
+La lógica de autorización está centralizada bajo src/modules/auth/permissions. Las operaciones sensibles deben utilizar requirePermission o los servicios protegidos del módulo.
+
+### Configuración inicial
+
+Después de aplicar las migraciones y solo mientras no exista ningún usuario, visita:
+
+~~~text
+http://localhost:3000/setup
+~~~
+
+La configuración inicial crea el primer usuario y un rol normal de base de datos con todos los permisos disponibles. No existen credenciales predeterminadas ni un rol ADMIN codificado en la aplicación.
+
+Después del primer usuario, la ruta de setup deja de estar disponible.
+
+### Administración
+
+Las áreas administrativas están disponibles en:
+
+- /seguridad/usuarios
+- /seguridad/roles
+- /seguridad/permisos
+
+Un administrador no puede asignarse roles a sí mismo ni otorgar permisos que no posea. Los cambios que dejarían al sistema sin ningún usuario activo con roles.manage son rechazados.
+
+### Alcance de permisos
+
+El permiso responde qué puede hacer un usuario. La capa de scope responde sobre qué información puede hacerlo.
+
+La arquitectura ya acepta comprobaciones con contexto, por ejemplo un stationId. Mientras un módulo no tenga una política de alcance implementada, las comprobaciones con alcance se deniegan por defecto.
 
 ## Validación
 
@@ -160,9 +195,12 @@ pnpm build
 El workflow de GitHub Actions valida:
 
 1. instalación reproducible con pnpm;
-2. lint;
-3. TypeScript;
-4. build de producción.
+2. PostgreSQL de prueba;
+3. aplicación de migraciones Prisma;
+4. smoke test de relaciones RBAC y auditoría;
+5. lint;
+6. TypeScript;
+7. build de producción.
 
 La rama principal del proyecto es main. Para cambios importantes se recomienda trabajar en ramas de tipo feat/*, fix/*, refactor/* o chore/* antes de integrar.
 
@@ -171,7 +209,10 @@ La rama principal del proyecto es main. Para cambios importantes se recomienda t
 - Base Next.js: preparada
 - Tailwind CSS: preparado
 - Prisma/PostgreSQL: preparados
-- Auth.js: base preparada
+- Auth.js: autenticación por credenciales preparada
+- Usuarios/Roles/Permisos: en validación
+- Auditoría de seguridad: preparada
+- Arquitectura de alcance: preparada para extensión
 - Docker de desarrollo: preparado
-- CI: preparado
-- Módulos funcionales: pendientes
+- CI: migraciones + RBAC + lint + TypeScript + build
+- Módulos operativos: pendientes
