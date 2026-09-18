@@ -20,17 +20,17 @@ export default async function SecurityLayout({
     redirect("/login");
   }
 
-  const administrationItems: AppNavigationItem[] = [];
+  const securityItems: AppNavigationItem[] = [];
 
   if (context.permissions.has("usuarios.view")) {
-    administrationItems.push({
+    securityItems.push({
       label: "Usuarios",
       href: "/seguridad/usuarios",
     });
   }
 
   if (context.permissions.has("roles.view")) {
-    administrationItems.push(
+    securityItems.push(
       {
         label: "Roles",
         href: "/seguridad/roles",
@@ -40,6 +40,15 @@ export default async function SecurityLayout({
         href: "/seguridad/permisos",
       },
     );
+  }
+
+  const administrationItems: AppNavigationItem[] = [];
+
+  if (securityItems.length > 0) {
+    administrationItems.push({
+      label: "Seguridad",
+      items: securityItems,
+    });
   }
 
   const navigation: AppNavigationGroup[] = [
