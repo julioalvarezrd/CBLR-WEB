@@ -4,6 +4,7 @@ export const appConfig = {
   organization: "Cuerpo de Bomberos de La Romana",
   brand: {
     logoPath: "/brand/sibor-logo.png",
+    darkLogoPath: "/brand/sibor-logo-dark.png",
     logoAlt: "SIBOR — Sistema Integral de Bomberos de La Romana",
   },
   footer: {
