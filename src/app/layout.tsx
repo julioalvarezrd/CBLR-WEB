@@ -1,25 +1,31 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 
 import { appConfig } from "@/lib/app-config";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: {
-    default: appConfig.name,
-    template: `%s | ${appConfig.name}`,
-  },
+  title: { default: appConfig.name, template: `%s | ${appConfig.name}` },
   description: appConfig.fullName,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const themeBootstrap = `
+try {
+  const preference = localStorage.getItem("sibor-theme") || "system";
+  const dark = preference === "dark" || (preference === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", dark);
+  document.documentElement.dataset.theme = preference;
+} catch {}
+`;
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
-      <body>{children}</body>
+    <html lang="es" suppressHydrationWarning>
+      <body>
+        <Script id="sibor-theme" strategy="beforeInteractive">{themeBootstrap}</Script>
+        {children}
+      </body>
     </html>
   );
 }
