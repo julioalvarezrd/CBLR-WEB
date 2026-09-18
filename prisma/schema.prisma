@@ -6,3 +6,93 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  passwordHash   String
+  isActive       Boolean  @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  roles                 UserRole[]       @relation("UserRoles")
+  roleAssignments       UserRole[]       @relation("UserRoleAssignedBy")
+  permissionAssignments RolePermission[] @relation("RolePermissionAssignedBy")
+  auditLogs             AuditLog[]       @relation("AuditActor")
+}
+
+model Role {
+  id             String   @id @default(cuid())
+  name           String
+  nameNormalized String   @unique
+  description    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  key         String   @id
+  module      String
+  action      String
+  label       String
+  description String?
+  critical    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles RolePermission[]
+}
+
+model UserRole {
+  userId       String
+  roleId       String
+  assignedAt   DateTime @default(now())
+  assignedById String?
+
+  user       User  @relation("UserRoles", fields: [userId], references: [id], onDelete: Cascade)
+  role       Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedBy User? @relation("UserRoleAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@index([assignedById])
+}
+
+model RolePermission {
+  roleId        String
+  permissionKey String
+  assignedAt    DateTime @default(now())
+  assignedById  String?
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionKey], references: [key], onDelete: Restrict)
+  assignedBy User?      @relation("RolePermissionAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@id([roleId, permissionKey])
+  @@index([permissionKey])
+  @@index([assignedById])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  before      Json?
+  after       Json?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

@@ -1,8 +1,11 @@
-# CBLR-WEB
+# SIBOR
+
+**Sistema Integral de Bomberos de La Romana**
 
 Plataforma web institucional del Cuerpo de Bomberos de La Romana.
 
-Esta primera etapa contiene únicamente la base técnica del proyecto. No incluye todavía módulos funcionales como Personal, Incidencias, Operativos, Vehículos, Estaciones o Reportes.
+El proyecto se desarrolla de forma modular para administrar progresivamente los
+procesos administrativos y operativos de la institución.
 
 ## Stack
 
@@ -73,16 +76,13 @@ La aplicación estará disponible en http://localhost:3000.
 
 Primero crea el archivo .env a partir de .env.example.
 
-Luego ejecuta:
+Para levantar PostgreSQL:
 
 ~~~bash
-pnpm docker:up
+docker compose up -d db
 ~~~
 
-Esto levanta:
-
-- la aplicación Next.js en el puerto 3000;
-- PostgreSQL en el puerto configurado por POSTGRES_PORT.
+El puerto publicado se controla mediante POSTGRES_PORT.
 
 Para detener los servicios:
 
@@ -92,7 +92,8 @@ pnpm docker:down
 
 ## Prisma
 
-En esta etapa Prisma está configurado para PostgreSQL, pero no existen modelos de negocio todavía.
+Prisma utiliza PostgreSQL y todos los cambios estructurales deben realizarse
+mediante migraciones.
 
 Comandos disponibles:
 
@@ -103,17 +104,90 @@ pnpm prisma:deploy
 pnpm prisma:studio
 ~~~
 
-Todo cambio futuro de estructura de datos debe realizarse mediante migraciones.
+## Auth.js y RBAC
 
-## Auth.js
+Auth.js utiliza credenciales institucionales y sesiones JWT. Los usuarios se
+almacenan en PostgreSQL y sus contraseñas se protegen con scrypt usando el
+módulo crypto de Node.js.
 
-Auth.js está conectado al App Router mediante:
+La autorización no depende del nombre de un rol. Los permisos efectivos se
+calculan desde roles activos almacenados en la base de datos.
 
-- src/auth.ts
-- src/modules/auth/auth.config.ts
-- src/app/api/auth/[...nextauth]/route.ts
+Estructura principal:
 
-Los proveedores de inicio de sesión, persistencia de usuarios, roles y permisos se incorporarán en una etapa posterior. La configuración actual no crea usuarios ni autoriza operaciones de negocio.
+- User: usuario institucional;
+- Role: agrupación dinámica de permisos;
+- Permission: catálogo central de capacidades;
+- UserRole: relación muchos-a-muchos entre usuarios y roles;
+- RolePermission: relación muchos-a-muchos entre roles y permisos;
+- AuditLog: registro de operaciones sensibles.
+
+La lógica de autorización está centralizada bajo
+src/modules/auth/permissions. Las operaciones sensibles deben utilizar
+requirePermission o los servicios protegidos del módulo.
+
+### Configuración inicial
+
+Después de aplicar las migraciones y solo mientras no exista ningún usuario,
+visita:
+
+~~~text
+http://localhost:3000/setup
+~~~
+
+La configuración inicial crea el primer usuario y un rol normal de base de
+datos con todos los permisos disponibles. No existen credenciales
+predeterminadas ni un rol ADMIN codificado en la aplicación.
+
+Después del primer usuario, la ruta de setup deja de estar disponible y el
+enlace de configuración inicial desaparece de la interfaz.
+
+### Administración
+
+Las áreas administrativas están disponibles en:
+
+- /seguridad/usuarios
+- /seguridad/roles
+- /seguridad/permisos
+
+Un administrador no puede asignarse roles a sí mismo ni otorgar permisos que
+no posea. Los cambios que dejarían al sistema sin ningún usuario activo con
+roles.manage son rechazados.
+
+### Alcance de permisos
+
+El permiso responde qué puede hacer un usuario. La capa de scope responde
+sobre qué información puede hacerlo.
+
+La arquitectura ya acepta comprobaciones con contexto, por ejemplo un
+stationId. Mientras un módulo no tenga una política de alcance implementada,
+las comprobaciones con alcance se deniegan por defecto.
+
+## Identidad visual
+
+La interfaz utiliza la marca SIBOR mediante un componente reutilizable:
+
+~~~text
+src/components/brand/sibor-brand.tsx
+~~~
+
+El logotipo oficial se carga desde:
+
+~~~text
+public/brand/sibor-logo.png
+~~~
+
+La ruta y los textos institucionales están centralizados en
+src/lib/app-config.ts.
+
+El pie reutilizable se encuentra en:
+
+~~~text
+src/components/layout/app-footer.tsx
+~~~
+
+El patrón visual y responsive de SIBOR está documentado en
+docs/ui-patterns.md.
 
 ## Validación
 
@@ -136,19 +210,20 @@ pnpm build
 ~~~text
 .
 ├── .github/workflows/       # Integración continua
-├── prisma/                  # Esquema y futuras migraciones
+├── prisma/                  # Esquema y migraciones
 ├── public/                  # Recursos estáticos
+├── scripts/                 # Utilidades de CI
 ├── src/
 │   ├── app/                 # App Router, layouts, páginas y rutas HTTP
-│   ├── components/          # Componentes reutilizables
+│   ├── components/          # Componentes reutilizables y marca
 │   ├── lib/                 # Infraestructura y utilidades compartidas
 │   ├── modules/             # Módulos funcionales aislados
-│   │   └── auth/            # Configuración base de autenticación
+│   │   └── auth/            # Autenticación, RBAC y auditoría
 │   ├── services/            # Servicios transversales
 │   ├── types/               # Tipos compartidos
 │   └── validations/         # Validaciones compartidas
-├── compose.yaml             # Aplicación + PostgreSQL para desarrollo
-├── Dockerfile               # Imagen de desarrollo
+├── compose.yaml             # Servicios Docker
+├── Dockerfile               # Imagen de aplicación
 ├── prisma.config.ts         # Configuración de Prisma
 ├── eslint.config.mjs        # Reglas de lint
 ├── tsconfig.json            # TypeScript estricto
@@ -160,18 +235,25 @@ pnpm build
 El workflow de GitHub Actions valida:
 
 1. instalación reproducible con pnpm;
-2. lint;
-3. TypeScript;
-4. build de producción.
+2. PostgreSQL de prueba;
+3. aplicación de migraciones Prisma;
+4. smoke test de relaciones RBAC y auditoría;
+5. lint;
+6. TypeScript;
+7. build de producción.
 
-La rama principal del proyecto es main. Para cambios importantes se recomienda trabajar en ramas de tipo feat/*, fix/*, refactor/* o chore/* antes de integrar.
+La rama principal del proyecto es main. Para cambios importantes se trabaja en
+ramas feat/*, fix/*, refactor/* o chore/* antes de integrar.
 
 ## Estado
 
-- Base Next.js: preparada
-- Tailwind CSS: preparado
+- Identidad SIBOR: preparada
+- Base Next.js/Tailwind: preparada
 - Prisma/PostgreSQL: preparados
-- Auth.js: base preparada
+- Auth.js: autenticación por credenciales preparada
+- Usuarios/Roles/Permisos: en validación
+- Auditoría de seguridad: preparada
+- Arquitectura de alcance: preparada para extensión
 - Docker de desarrollo: preparado
-- CI: preparado
-- Módulos funcionales: pendientes
+- CI: migraciones + RBAC + lint + TypeScript + build
+- Módulos operativos: pendientes
