@@ -1,25 +1,58 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 type ThemePreference = "light" | "dark" | "system";
 
 const STORAGE_KEY = "sibor-theme";
+const THEME_EVENT = "sibor-theme-change";
+
+function isThemePreference(value: string | null): value is ThemePreference {
+  return value === "light" || value === "dark" || value === "system";
+}
+
+function getPreference(): ThemePreference {
+  if (typeof window === "undefined") return "system";
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  return isThemePreference(stored) ? stored : "system";
+}
 
 function getResolvedDark(preference: ThemePreference): boolean {
-  return (
-    preference === "dark" ||
-    (preference === "system" &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches)
-  );
+  if (typeof window === "undefined") return false;
+  return preference === "dark" || (preference === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 }
 
 function applyTheme(preference: ThemePreference): void {
-  document.documentElement.classList.toggle(
-    "dark",
-    getResolvedDark(preference),
-  );
+  document.documentElement.classList.toggle("dark", getResolvedDark(preference));
   document.documentElement.dataset.theme = preference;
+}
+
+function subscribe(onStoreChange: () => void): () => void {
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleChange = () => {
+    applyTheme(getPreference());
+    onStoreChange();
+  };
+
+  window.addEventListener("storage", handleChange);
+  window.addEventListener(THEME_EVENT, handleChange);
+  media.addEventListener("change", handleChange);
+  applyTheme(getPreference());
+
+  return () => {
+    window.removeEventListener("storage", handleChange);
+    window.removeEventListener(THEME_EVENT, handleChange);
+    media.removeEventListener("change", handleChange);
+  };
+}
+
+function getSnapshot(): string {
+  const preference = getPreference();
+  return `${preference}:${getResolvedDark(preference) ? "dark" : "light"}`;
+}
+
+function getServerSnapshot(): string {
+  return "system:light";
 }
 
 function ThemeIcon({ dark }: { dark: boolean }) {
@@ -36,38 +69,14 @@ function ThemeIcon({ dark }: { dark: boolean }) {
 }
 
 export function ThemeToggle() {
-  const [preference, setPreference] = useState<ThemePreference>("system");
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    const initial: ThemePreference =
-      stored === "light" || stored === "dark" || stored === "system"
-        ? stored
-        : "system";
-
-    setPreference(initial);
-    applyTheme(initial);
-    setDark(getResolvedDark(initial));
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleSystemChange = () => {
-      if ((window.localStorage.getItem(STORAGE_KEY) ?? "system") === "system") {
-        applyTheme("system");
-        setDark(media.matches);
-      }
-    };
-
-    media.addEventListener("change", handleSystemChange);
-    return () => media.removeEventListener("change", handleSystemChange);
-  }, []);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const dark = snapshot.endsWith(":dark");
 
   function toggleTheme(): void {
     const next: ThemePreference = dark ? "light" : "dark";
-    setPreference(next);
-    setDark(next === "dark");
     window.localStorage.setItem(STORAGE_KEY, next);
     applyTheme(next);
+    window.dispatchEvent(new Event(THEME_EVENT));
   }
 
   const label = dark ? "Cambiar a tema claro" : "Cambiar a tema oscuro";
@@ -78,7 +87,6 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={label}
       title={label}
-      data-theme-preference={preference}
       className="grid size-10 place-items-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:focus-visible:ring-offset-slate-950"
     >
       <ThemeIcon dark={dark} />
