@@ -9,7 +9,7 @@ export async function loginAction(formData: FormData): Promise<void> {
   await signIn("credentials", {
     email: typeof email === "string" ? email : "",
     password: typeof password === "string" ? password : "",
-    redirectTo: "/seguridad",
+    redirectTo: "/inicio",
   });
 }
 
