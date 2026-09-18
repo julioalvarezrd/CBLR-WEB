@@ -7,14 +7,14 @@ type AppFooterProps = {
 export function AppFooter({ className = "" }: AppFooterProps) {
   return (
     <footer
-      className={`px-6 py-6 text-center text-sm text-slate-500 ${className}`}
+      className={`px-4 pb-5 pt-2 text-center text-xs text-slate-400 dark:text-slate-500 ${className}`}
     >
       {appConfig.footer.text}{" "}
       <a
         href={appConfig.footer.authorUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-4 hover:text-slate-950"
+        className="font-semibold text-slate-600 transition hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
       >
         {appConfig.footer.author}
       </a>
