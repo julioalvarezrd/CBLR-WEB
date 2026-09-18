@@ -56,6 +56,9 @@ jobs:
       - name: Apply database migrations
         run: pnpm prisma:deploy
 
+      - name: RBAC database smoke test
+        run: node scripts/ci/rbac-smoke.mjs
+
       - name: Lint
         run: pnpm lint
 
