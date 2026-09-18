@@ -14,6 +14,22 @@ type ModuleHeaderProps = {
   stats?: readonly ModuleStat[];
 };
 
+function getStatsGridClass(count: number): string {
+  if (count >= 4) {
+    return "sm:grid-cols-2 xl:grid-cols-4";
+  }
+
+  if (count === 3) {
+    return "sm:grid-cols-3";
+  }
+
+  if (count === 2) {
+    return "sm:grid-cols-2";
+  }
+
+  return "grid-cols-1";
+}
+
 export function ModuleHeader({
   eyebrow,
   title,
@@ -41,14 +57,19 @@ export function ModuleHeader({
 
       {stats && stats.length > 0 ? (
         <div
-          className="grid divide-y divide-slate-200 border-t border-slate-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4"
+          className={`grid gap-px border-t border-slate-200 bg-slate-200 ${getStatsGridClass(
+            stats.length,
+          )}`}
         >
           {stats.map((stat) => (
-            <div key={stat.label} className="min-w-0 px-5 py-5 sm:px-6">
+            <div
+              key={stat.label}
+              className="min-w-0 bg-white px-5 py-5 sm:px-6"
+            >
               <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
                 {stat.label}
               </p>
-              <p className="mt-2 text-2xl font-bold text-slate-950">
+              <p className="mt-2 break-words text-2xl font-bold text-slate-950">
                 {stat.value}
               </p>
               {stat.description ? (

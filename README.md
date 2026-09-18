@@ -171,15 +171,23 @@ La interfaz utiliza la marca SIBOR mediante un componente reutilizable:
 src/components/brand/sibor-brand.tsx
 ~~~
 
-Actualmente muestra un identificador visual de respaldo. Cuando esté
-disponible el logotipo oficial de SIBOR, se sustituirá en ese componente para
-que el cambio se refleje en login, setup y cabeceras sin duplicar lógica.
+El logotipo oficial se carga desde:
+
+~~~text
+public/brand/sibor-logo.png
+~~~
+
+La ruta y los textos institucionales están centralizados en
+src/lib/app-config.ts.
 
 El pie reutilizable se encuentra en:
 
 ~~~text
 src/components/layout/app-footer.tsx
 ~~~
+
+El patrón visual y responsive de SIBOR está documentado en
+docs/ui-patterns.md.
 
 ## Validación
 
