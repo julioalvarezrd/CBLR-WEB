@@ -4,6 +4,7 @@ node_modules/
 # Next.js
 .next/
 out/
+next-env.d.ts
 
 # Build output
 build/
@@ -16,6 +17,9 @@ dist/
 
 # Prisma generated client
 src/generated/prisma/
+
+# TypeScript
+*.tsbuildinfo
 
 # Logs and coverage
 *.log
