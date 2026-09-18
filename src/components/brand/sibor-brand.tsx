@@ -1,51 +1,31 @@
+import Image from "next/image";
+
 type SiborBrandProps = {
   compact?: boolean;
   className?: string;
 };
 
-/**
- * Marca reutilizable de SIBOR.
- *
- * El bloque con la "S" funciona como fallback hasta disponer del logotipo
- * institucional definitivo. Cuando se agregue el archivo oficial en /public,
- * este componente será el único punto que habrá que actualizar.
- */
 export function SiborBrand({
   compact = false,
   className = "",
 }: SiborBrandProps) {
   return (
     <div
-      className={`flex items-center gap-3 ${className}`}
+      className={`flex items-center ${className}`}
       aria-label="SIBOR — Sistema Integral de Bomberos de La Romana"
     >
-      <div
+      <Image
+        src="/brand/sibor-logo.png"
+        alt="SIBOR — Sistema Integral de Bomberos de La Romana"
+        width={compact ? 180 : 340}
+        height={compact ? 56 : 106}
+        priority={!compact}
         className={
           compact
-            ? "grid size-10 shrink-0 place-items-center rounded-xl bg-red-700 text-lg font-black text-white shadow-sm"
-            : "grid size-16 shrink-0 place-items-center rounded-2xl bg-red-700 text-2xl font-black text-white shadow-sm"
+            ? "h-auto w-[150px] object-contain sm:w-[180px]"
+            : "mx-auto h-auto w-full max-w-[340px] object-contain"
         }
-        aria-hidden="true"
-      >
-        S
-      </div>
-
-      <div>
-        <p
-          className={
-            compact
-              ? "text-lg font-black tracking-tight text-slate-900"
-              : "text-2xl font-black tracking-tight text-slate-900"
-          }
-        >
-          SIBOR
-        </p>
-        {!compact ? (
-          <p className="max-w-xs text-xs leading-5 text-slate-500">
-            Sistema Integral de Bomberos de La Romana
-          </p>
-        ) : null}
-      </div>
+      />
     </div>
   );
 }
