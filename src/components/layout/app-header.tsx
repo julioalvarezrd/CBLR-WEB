@@ -108,20 +108,22 @@ export function AppHeader({ navigation, user }: AppHeaderProps) {
           ) : group.href ? <Link key={group.label} href={group.href} className="rounded-lg px-2 py-2 text-sm font-medium text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white">{group.label}</Link> : null)}
         </nav>
 
-        <div className="relative ml-auto">
-          <button type="button" onClick={() => { setUserOpen((value) => !value); setDesktopMenu(null); setMobileOpen(false); }} aria-expanded={userOpen} className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800">
-            <span className="grid size-9 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white dark:bg-slate-700">{initials}</span>
-            <span className="hidden max-w-36 truncate text-sm font-semibold text-slate-700 sm:block dark:text-slate-200">{user.name}</span>
-            <Chevron />
-          </button>
-          {userOpen ? (
-            <div className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-              <div className="px-3 py-2"><p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{user.name}</p><p className="truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</p></div>
-              <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
-              <div className="px-2 pb-2"><ThemeToggle /></div>
-              <form action={logoutAction}><button type="submit" className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">Cerrar sesión</button></form>
-            </div>
-          ) : null}
+        <div className="ml-auto flex items-center gap-1">
+          <ThemeToggle />
+          <div className="relative">
+            <button type="button" onClick={() => { setUserOpen((value) => !value); setDesktopMenu(null); setMobileOpen(false); }} aria-expanded={userOpen} className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800">
+              <span className="grid size-9 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white dark:bg-slate-700">{initials}</span>
+              <span className="hidden max-w-36 truncate text-sm font-semibold text-slate-700 sm:block dark:text-slate-200">{user.name}</span>
+              <Chevron />
+            </button>
+            {userOpen ? (
+              <div className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                <div className="px-3 py-2"><p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{user.name}</p><p className="truncate text-xs text-slate-500 dark:text-slate-400">{user.email}</p></div>
+                <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
+                <form action={logoutAction}><button type="submit" className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800">Cerrar sesión</button></form>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
