@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import { PERMISSION_GROUPS } from "@/modules/auth/permissions/catalog";
+import {
+  isPermissionKey,
+  PERMISSION_GROUPS,
+} from "@/modules/auth/permissions/catalog";
 import { requirePagePermission } from "@/modules/auth/permissions/page-authorization";
 import {
   deleteRoleAction,
@@ -29,6 +32,13 @@ export default async function RolePage({
   const query = await searchParams;
   const role = await getRole(roleId);
   const canManage = context.permissions.has("roles.manage");
+  const canManageRole =
+    canManage &&
+    role.permissions.every(
+      ({ permissionKey }) =>
+        isPermissionKey(permissionKey) &&
+        context.permissions.has(permissionKey),
+    );
   const selectedPermissions = new Set(
     role.permissions.map(({ permissionKey }) => permissionKey),
   );
@@ -77,7 +87,7 @@ export default async function RolePage({
               id="name"
               name="name"
               defaultValue={role.name}
-              disabled={!canManage}
+              disabled={!canManageRole}
               required
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
             />
@@ -90,13 +100,13 @@ export default async function RolePage({
               id="description"
               name="description"
               defaultValue={role.description ?? ""}
-              disabled={!canManage}
+              disabled={!canManageRole}
               className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
             />
           </div>
         </div>
 
-        {canManage ? (
+        {canManageRole ? (
           <button
             type="submit"
             className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
@@ -113,7 +123,8 @@ export default async function RolePage({
           <h2 className="text-xl font-semibold">Permisos del rol</h2>
           <p className="mt-1 text-sm text-slate-600">
             Los permisos críticos están señalados. El servidor impedirá cambios
-            que dejen al sistema sin administración de roles.
+            que dejen al sistema sin administración de roles o que afecten un
+            rol con permisos superiores a los tuyos.
           </p>
         </div>
 
@@ -121,7 +132,7 @@ export default async function RolePage({
           {PERMISSION_GROUPS.map((group) => (
             <fieldset
               key={group.module}
-              disabled={!canManage}
+              disabled={!canManageRole}
               className="rounded-xl border border-slate-200 bg-white p-5 disabled:opacity-70"
             >
               <legend className="px-1 font-semibold">{group.label}</legend>
@@ -136,7 +147,8 @@ export default async function RolePage({
                       name="permissions"
                       value={permission.key}
                       defaultChecked={selectedPermissions.has(permission.key)}
-                      className="mt-1"
+                      disabled={!context.permissions.has(permission.key)}
+                      className="mt-1 disabled:cursor-not-allowed"
                     />
                     <span>
                       <span className="font-medium">{permission.label}</span>{" "}
@@ -156,7 +168,7 @@ export default async function RolePage({
           ))}
         </div>
 
-        {canManage ? (
+        {canManageRole ? (
           <button
             type="submit"
             className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
@@ -166,7 +178,7 @@ export default async function RolePage({
         ) : null}
       </form>
 
-      {canManage ? (
+      {canManageRole ? (
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           <form
             className="rounded-xl border border-slate-200 bg-white p-5"
