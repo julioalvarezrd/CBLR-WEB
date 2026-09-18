@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ContentPanel } from "@/components/ui/content-panel";
+import { ModuleHeader } from "@/components/ui/module-header";
 import { getAuthorizationContext } from "@/modules/auth/permissions/authorization";
 
 export default async function SecurityPage() {
@@ -13,47 +15,69 @@ export default async function SecurityPage() {
     {
       href: "/seguridad/usuarios",
       title: "Usuarios",
-      description: "Usuarios institucionales y asignaciones de roles.",
+      description:
+        "Administra cuentas institucionales, estado de acceso y asignaciones de roles.",
       visible: context.permissions.has("usuarios.view"),
     },
     {
       href: "/seguridad/roles",
       title: "Roles",
-      description: "Agrupación dinámica de permisos y estado de roles.",
+      description:
+        "Gestiona agrupaciones de permisos sin depender de nombres de rol en el código.",
       visible: context.permissions.has("roles.view"),
     },
     {
       href: "/seguridad/permisos",
       title: "Permisos",
-      description: "Catálogo central de capacidades disponibles.",
+      description:
+        "Consulta el catálogo central de capacidades disponibles en SIBOR.",
       visible: context.permissions.has("roles.view"),
     },
   ];
 
   return (
-    <section>
-      <h1 className="text-3xl font-bold">Seguridad y acceso</h1>
-      <p className="mt-2 text-slate-600">
-        Sesión de {context.user.name}. Tienes {context.permissions.size} permisos
-        efectivos mediante {context.roles.length} rol(es) activo(s).
-      </p>
+    <div className="space-y-7">
+      <ModuleHeader
+        eyebrow="Administración"
+        title="Seguridad y acceso"
+        description="Gestiona usuarios, roles y permisos con autorización centralizada y validación del lado del servidor."
+        stats={[
+          {
+            label: "Permisos efectivos",
+            value: context.permissions.size,
+            description: "Disponibles en tu sesión",
+          },
+          {
+            label: "Roles activos",
+            value: context.roles.length,
+            description: "Asignados a tu usuario",
+          },
+        ]}
+      />
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {sections
-          .filter((section) => section.visible)
-          .map((section) => (
-            <Link
-              key={section.href}
-              href={section.href}
-              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:border-slate-300"
-            >
-              <h2 className="font-semibold">{section.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {section.description}
-              </p>
-            </Link>
-          ))}
-      </div>
-    </section>
+      <ContentPanel
+        title="Administración de seguridad"
+        description="Selecciona un área para consultar o administrar su configuración."
+      >
+        <div className="grid gap-4 p-5 sm:grid-cols-2 sm:p-6 xl:grid-cols-3">
+          {sections
+            .filter((section) => section.visible)
+            .map((section) => (
+              <Link
+                key={section.href}
+                href={section.href}
+                className="group rounded-xl border border-slate-200 p-5 transition hover:border-red-200 hover:bg-red-50/30"
+              >
+                <h2 className="font-bold text-slate-950 group-hover:text-red-700">
+                  {section.title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {section.description}
+                </p>
+              </Link>
+            ))}
+        </div>
+      </ContentPanel>
+    </div>
   );
 }

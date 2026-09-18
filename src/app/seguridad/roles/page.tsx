@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import { ContentPanel } from "@/components/ui/content-panel";
+import { ModuleHeader } from "@/components/ui/module-header";
+import { NavigableTableRow } from "@/components/ui/navigable-table-row";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { requirePagePermission } from "@/modules/auth/permissions/page-authorization";
 import { listRoles } from "@/modules/auth/roles/role.service";
 
@@ -15,76 +19,123 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
   const params = await searchParams;
   const canManage = context.permissions.has("roles.manage");
 
-  return (
-    <section>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Roles</h1>
-          <p className="mt-2 text-slate-600">
-            Los roles agrupan permisos; la autorización no depende del nombre
-            del rol.
-          </p>
-        </div>
+  const activeRoles = roles.filter((role) => role.isActive).length;
+  const inactiveRoles = roles.length - activeRoles;
+  const assignments = roles.reduce(
+    (total, role) => total + role._count.users,
+    0,
+  );
 
-        {canManage ? (
-          <Link
-            href="/seguridad/roles/nuevo"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Nuevo rol
-          </Link>
-        ) : null}
-      </div>
+  return (
+    <div className="space-y-7">
+      <ModuleHeader
+        eyebrow="Administración"
+        title="Roles y acceso"
+        description="Agrupa permisos en roles administrables sin utilizar nombres de rol para autorizar operaciones."
+        action={
+          canManage ? (
+            <Link
+              href="/seguridad/roles/nuevo"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-red-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800 sm:w-auto"
+            >
+              Nuevo rol
+            </Link>
+          ) : undefined
+        }
+        stats={[
+          {
+            label: "Roles",
+            value: roles.length,
+            description: "Total registrado",
+          },
+          {
+            label: "Activos",
+            value: activeRoles,
+            description: "Otorgan permisos",
+          },
+          {
+            label: "Inactivos",
+            value: inactiveRoles,
+            description: "Sin efecto de autorización",
+          },
+          {
+            label: "Asignaciones",
+            value: assignments,
+            description: "Relaciones usuario-rol",
+          },
+        ]}
+      />
 
       {params.deleted === "1" ? (
-        <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-          Rol eliminado.
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          Rol eliminado correctamente.
         </div>
       ) : null}
 
-      <div className="mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th className="px-4 py-3 font-medium">Rol</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Usuarios</th>
-              <th className="px-4 py-3 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {roles.map((role) => (
-              <tr key={role.id}>
-                <td className="px-4 py-4">
-                  <p className="font-medium">{role.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {role.description || "Sin descripción"}
-                  </p>
-                </td>
-                <td className="px-4 py-4">
-                  {role.isActive ? "Activo" : "Inactivo"}
-                </td>
-                <td className="px-4 py-4">{role._count.users}</td>
-                <td className="px-4 py-4 text-right">
-                  <Link
-                    href={"/seguridad/roles/" + role.id}
-                    className="font-medium underline"
-                  >
-                    Ver
-                  </Link>
-                </td>
-              </tr>
-            ))}
-            {roles.length === 0 ? (
+      <ContentPanel
+        title="Directorio de roles"
+        description="Toca una fila para consultar o administrar el rol."
+        trailing={
+          <span className="text-sm font-medium text-slate-400">
+            {roles.length} {roles.length === 1 ? "resultado" : "resultados"}
+          </span>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left text-sm">
+            <thead className="bg-slate-50/80 text-slate-600">
               <tr>
-                <td colSpan={4} className="px-4 py-10 text-center text-slate-500">
-                  No hay roles registrados.
-                </td>
+                <th className="px-6 py-4 font-semibold">Rol</th>
+                <th className="px-6 py-4 font-semibold">Descripción</th>
+                <th className="px-6 py-4 font-semibold">Usuarios</th>
+                <th className="px-6 py-4 font-semibold">Estado</th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-    </section>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {roles.map((role) => {
+                const href = "/seguridad/roles/" + role.id;
+
+                return (
+                  <NavigableTableRow key={role.id} href={href}>
+                    <td className="px-6 py-4">
+                      <Link
+                        href={href}
+                        className="font-bold text-slate-900 hover:text-red-700"
+                      >
+                        {role.name}
+                      </Link>
+                    </td>
+                    <td className="max-w-xl px-6 py-4 text-slate-600">
+                      {role.description || "Sin descripción"}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-slate-700">
+                      {role._count.users}
+                    </td>
+                    <td className="px-6 py-4">
+                      <StatusBadge
+                        tone={role.isActive ? "success" : "neutral"}
+                      >
+                        {role.isActive ? "Activo" : "Inactivo"}
+                      </StatusBadge>
+                    </td>
+                  </NavigableTableRow>
+                );
+              })}
+
+              {roles.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-12 text-center text-slate-500"
+                  >
+                    No hay roles registrados.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </ContentPanel>
+    </div>
   );
 }
