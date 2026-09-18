@@ -1,5 +1,7 @@
-import Link from "next/link";
-
+import { BackLink } from "@/components/ui/back-link";
+import { ContentPanel } from "@/components/ui/content-panel";
+import { ModuleHeader } from "@/components/ui/module-header";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   isPermissionKey,
   PERMISSION_GROUPS,
@@ -23,6 +25,9 @@ type RolePageProps = {
   }>;
 };
 
+const inputClassName =
+  "mt-2 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500";
+
 export default async function RolePage({
   params,
   searchParams,
@@ -44,184 +49,231 @@ export default async function RolePage({
   );
 
   return (
-    <section>
-      <Link href="/seguridad/roles" className="text-sm underline">
-        ← Volver a roles
-      </Link>
+    <div className="space-y-6">
+      <BackLink href="/seguridad/roles">Volver a roles</BackLink>
 
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">{role.name}</h1>
-          <p className="mt-2 text-slate-600">
-            {role._count.users} usuario(s) tienen este rol.
-          </p>
-        </div>
-        <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm">
-          {role.isActive ? "Activo" : "Inactivo"}
-        </span>
-      </div>
+      <ModuleHeader
+        eyebrow="Administración"
+        title={role.name}
+        description={
+          role.description ||
+          "Rol sin descripción. La autorización depende de los permisos asignados."
+        }
+        action={
+          <StatusBadge tone={role.isActive ? "success" : "neutral"}>
+            {role.isActive ? "Activo" : "Inactivo"}
+          </StatusBadge>
+        }
+        stats={[
+          {
+            label: "Usuarios",
+            value: role._count.users,
+            description: "Asignados a este rol",
+          },
+          {
+            label: "Permisos",
+            value: role.permissions.length,
+            description: "Capacidades agrupadas",
+          },
+        ]}
+      />
 
       {query.saved === "1" ? (
-        <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-          Cambios guardados.
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          Cambios guardados correctamente.
         </div>
       ) : null}
 
       {query.error ? (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
           {query.error}
         </div>
       ) : null}
 
-      <form
-        action={updateRoleAction}
-        className="mt-8 rounded-xl border border-slate-200 bg-white p-6"
+      <ContentPanel
+        title="Información del rol"
+        description={
+          canManageRole
+            ? "Puedes modificar el nombre y descripción de este rol."
+            : "Puedes consultar este rol, pero no modificarlo con tus permisos actuales."
+        }
       >
-        <input type="hidden" name="roleId" value={role.id} />
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="name" className="text-sm font-medium">
-              Nombre
-            </label>
-            <input
-              id="name"
-              name="name"
-              defaultValue={role.name}
-              disabled={!canManageRole}
-              required
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-            />
+        <form action={updateRoleAction} className="p-5 sm:p-6">
+          <input type="hidden" name="roleId" value={role.id} />
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="name"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Nombre
+              </label>
+              <input
+                id="name"
+                name="name"
+                defaultValue={role.name}
+                disabled={!canManageRole}
+                required
+                className={inputClassName}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="description"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Descripción
+              </label>
+              <input
+                id="description"
+                name="description"
+                defaultValue={role.description ?? ""}
+                disabled={!canManageRole}
+                className={inputClassName}
+              />
+            </div>
           </div>
-          <div>
-            <label htmlFor="description" className="text-sm font-medium">
-              Descripción
-            </label>
-            <input
-              id="description"
-              name="description"
-              defaultValue={role.description ?? ""}
-              disabled={!canManageRole}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
-            />
-          </div>
-        </div>
 
-        {canManageRole ? (
-          <button
-            type="submit"
-            className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Guardar información
-          </button>
-        ) : null}
-      </form>
+          {canManageRole ? (
+            <div className="mt-6 flex justify-end">
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-red-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800 sm:w-auto"
+              >
+                Guardar información
+              </button>
+            </div>
+          ) : null}
+        </form>
+      </ContentPanel>
 
-      <form action={updateRolePermissionsAction} className="mt-8 space-y-5">
-        <input type="hidden" name="roleId" value={role.id} />
+      <ContentPanel
+        title="Permisos del rol"
+        description="Los cambios se validan nuevamente en el servidor y no pueden dejar al sistema sin administración de seguridad."
+      >
+        <form action={updateRolePermissionsAction} className="p-5 sm:p-6">
+          <input type="hidden" name="roleId" value={role.id} />
 
-        <div>
-          <h2 className="text-xl font-semibold">Permisos del rol</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Los permisos críticos están señalados. El servidor impedirá cambios
-            que dejen al sistema sin administración de roles o que afecten un
-            rol con permisos superiores a los tuyos.
-          </p>
-        </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {PERMISSION_GROUPS.map((group) => (
+              <fieldset
+                key={group.module}
+                disabled={!canManageRole}
+                className="rounded-xl border border-slate-200 bg-slate-50/40 p-5 disabled:opacity-60"
+              >
+                <legend className="px-1 text-sm font-bold text-slate-900">
+                  {group.label}
+                </legend>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          {PERMISSION_GROUPS.map((group) => (
-            <fieldset
-              key={group.module}
-              disabled={!canManageRole}
-              className="rounded-xl border border-slate-200 bg-white p-5 disabled:opacity-70"
-            >
-              <legend className="px-1 font-semibold">{group.label}</legend>
-              <div className="mt-2 space-y-3">
-                {group.permissions.map((permission) => (
-                  <label
-                    key={permission.key}
-                    className="flex items-start gap-3 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      name="permissions"
-                      value={permission.key}
-                      defaultChecked={selectedPermissions.has(permission.key)}
-                      disabled={!context.permissions.has(permission.key)}
-                      className="mt-1 disabled:cursor-not-allowed"
-                    />
-                    <span>
-                      <span className="font-medium">{permission.label}</span>{" "}
-                      <code className="text-xs text-slate-500">
-                        {permission.key}
-                      </code>
-                      {permission.critical ? (
-                        <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-800">
-                          Crítico
+                <div className="mt-2 space-y-3">
+                  {group.permissions.map((permission) => {
+                    const available = context.permissions.has(permission.key);
+
+                    return (
+                      <label
+                        key={permission.key}
+                        className={
+                          available
+                            ? "flex cursor-pointer items-start gap-3 rounded-lg bg-white p-3"
+                            : "flex cursor-not-allowed items-start gap-3 rounded-lg bg-white p-3 opacity-45"
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          name="permissions"
+                          value={permission.key}
+                          defaultChecked={selectedPermissions.has(permission.key)}
+                          disabled={!available}
+                          className="mt-0.5 size-4 accent-red-700"
+                        />
+                        <span className="min-w-0">
+                          <span className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-bold text-slate-800">
+                              {permission.label}
+                            </span>
+                            {permission.critical ? (
+                              <StatusBadge tone="danger">Crítico</StatusBadge>
+                            ) : null}
+                          </span>
+                          <code className="mt-1 block text-xs text-slate-400">
+                            {permission.key}
+                          </code>
+                          <span className="mt-1 block text-xs leading-5 text-slate-500">
+                            {permission.description}
+                          </span>
                         </span>
-                      ) : null}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          ))}
-        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
+          </div>
 
-        {canManageRole ? (
-          <button
-            type="submit"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Guardar permisos
-          </button>
-        ) : null}
-      </form>
+          {canManageRole ? (
+            <div className="mt-6 flex justify-end">
+              <button
+                type="submit"
+                className="w-full rounded-xl bg-red-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800 sm:w-auto"
+              >
+                Guardar permisos
+              </button>
+            </div>
+          ) : null}
+        </form>
+      </ContentPanel>
 
       {canManageRole ? (
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <form
-            className="rounded-xl border border-slate-200 bg-white p-5"
-            action={setRoleActiveAction}
-          >
-            <input type="hidden" name="roleId" value={role.id} />
-            <input
-              type="hidden"
-              name="isActive"
-              value={role.isActive ? "false" : "true"}
-            />
-            <h2 className="font-semibold">Estado del rol</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Los roles inactivos dejan de otorgar permisos sin perder sus
-              asignaciones.
-            </p>
-            <button
-              type="submit"
-              className="mt-4 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium"
+        <ContentPanel
+          title="Acciones administrativas"
+          description="Estas operaciones afectan inmediatamente la autorización de los usuarios relacionados."
+        >
+          <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-2">
+            <form
+              action={setRoleActiveAction}
+              className="rounded-xl border border-slate-200 p-5"
             >
-              {role.isActive ? "Desactivar rol" : "Activar rol"}
-            </button>
-          </form>
+              <input type="hidden" name="roleId" value={role.id} />
+              <input
+                type="hidden"
+                name="isActive"
+                value={role.isActive ? "false" : "true"}
+              />
+              <h3 className="font-bold text-slate-900">Estado del rol</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Los roles inactivos dejan de otorgar permisos sin perder sus
+                asignaciones.
+              </p>
+              <button
+                type="submit"
+                className="mt-4 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+              >
+                {role.isActive ? "Desactivar rol" : "Activar rol"}
+              </button>
+            </form>
 
-          <form
-            action={deleteRoleAction}
-            className="rounded-xl border border-red-200 bg-red-50 p-5"
-          >
-            <input type="hidden" name="roleId" value={role.id} />
-            <h2 className="font-semibold text-red-900">Eliminar rol</h2>
-            <p className="mt-2 text-sm text-red-800">
-              Solo es posible si no está asignado a ningún usuario.
-            </p>
-            <button
-              type="submit"
-              disabled={role._count.users > 0}
-              className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            <form
+              action={deleteRoleAction}
+              className="rounded-xl border border-red-200 bg-red-50/60 p-5"
             >
-              Eliminar
-            </button>
-          </form>
-        </div>
+              <input type="hidden" name="roleId" value={role.id} />
+              <h3 className="font-bold text-red-900">Eliminar rol</h3>
+              <p className="mt-2 text-sm leading-6 text-red-700">
+                Solo es posible eliminarlo cuando no esté asignado a ningún
+                usuario.
+              </p>
+              <button
+                type="submit"
+                disabled={role._count.users > 0}
+                className="mt-4 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Eliminar rol
+              </button>
+            </form>
+          </div>
+        </ContentPanel>
       ) : null}
-    </section>
+    </div>
   );
 }

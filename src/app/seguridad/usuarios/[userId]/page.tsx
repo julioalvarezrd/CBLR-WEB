@@ -1,5 +1,7 @@
-import Link from "next/link";
-
+import { BackLink } from "@/components/ui/back-link";
+import { ContentPanel } from "@/components/ui/content-panel";
+import { ModuleHeader } from "@/components/ui/module-header";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { requirePagePermission } from "@/modules/auth/permissions/page-authorization";
 import {
   setUserActiveAction,
@@ -19,6 +21,11 @@ type UserPageProps = {
     saved?: string;
   }>;
 };
+
+const dateFormatter = new Intl.DateTimeFormat("es-DO", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
 
 export default async function UserPage({
   params,
@@ -40,89 +47,78 @@ export default async function UserPage({
   const selectedRoleIds = new Set(user.roles.map(({ role }) => role.id));
 
   return (
-    <section>
-      <Link href="/seguridad/usuarios" className="text-sm underline">
-        ← Volver a usuarios
-      </Link>
+    <div className="space-y-6">
+      <BackLink href="/seguridad/usuarios">Volver a usuarios</BackLink>
 
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">{user.name}</h1>
-          <p className="mt-2 text-slate-600">{user.email}</p>
-        </div>
-        <span className="rounded-full border border-slate-300 bg-white px-3 py-1 text-sm">
-          {user.isActive ? "Activo" : "Inactivo"}
-        </span>
-      </div>
+      <ModuleHeader
+        eyebrow="Administración"
+        title={user.name}
+        description={user.email}
+        action={
+          <StatusBadge tone={user.isActive ? "success" : "neutral"}>
+            {user.isActive ? "Activo" : "Inactivo"}
+          </StatusBadge>
+        }
+        stats={[
+          {
+            label: "Roles",
+            value: user.roles.length,
+            description: "Asignados al usuario",
+          },
+          {
+            label: "Último acceso",
+            value: user.lastLoginAt
+              ? dateFormatter.format(user.lastLoginAt)
+              : "Nunca",
+            description: "Último inicio de sesión",
+          },
+        ]}
+      />
 
       {query.saved === "1" ? (
-        <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
-          Cambios guardados.
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          Cambios guardados correctamente.
         </div>
       ) : null}
 
       {query.error ? (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
           {query.error}
         </div>
       ) : null}
 
-      <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6">
-        <h2 className="font-semibold">Información de acceso</h2>
-        <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-slate-500">Último acceso</dt>
-            <dd className="mt-1 font-medium">
-              {user.lastLoginAt
-                ? user.lastLoginAt.toLocaleString("es-DO")
-                : "Nunca"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Roles asignados</dt>
-            <dd className="mt-1 font-medium">
-              {user.roles.length > 0
-                ? user.roles.map(({ role }) => role.name).join(", ")
-                : "Sin roles"}
-            </dd>
-          </div>
-        </dl>
-      </div>
-
       {canAssignRoles ? (
-        <form
-          action={setUserRolesAction}
-          className="mt-8 rounded-xl border border-slate-200 bg-white p-6"
+        <ContentPanel
+          title="Asignación de roles"
+          description="No puedes asignar un rol que contenga permisos que tú no poseas."
         >
-          <input type="hidden" name="userId" value={user.id} />
-          <h2 className="font-semibold">Asignación de roles</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            No puedes asignar un rol que contenga permisos que tú no poseas.
-          </p>
-
           {isSelf ? (
-            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            <div className="m-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:m-6">
               Por seguridad no puedes modificar tus propias asignaciones de
               roles.
             </div>
           ) : (
-            <>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <form action={setUserRolesAction} className="p-5 sm:p-6">
+              <input type="hidden" name="userId" value={user.id} />
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {assignableRoles.map((role) => (
                   <label
                     key={role.id}
-                    className="flex items-start gap-3 text-sm"
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 transition hover:border-red-200 hover:bg-red-50/30"
                   >
                     <input
                       type="checkbox"
                       name="roles"
                       value={role.id}
                       defaultChecked={selectedRoleIds.has(role.id)}
-                      className="mt-1"
+                      className="mt-0.5 size-4 accent-red-700"
                     />
                     <span>
-                      <span className="font-medium">{role.name}</span>
-                      <span className="block text-xs text-slate-500">
+                      <span className="block text-sm font-bold text-slate-900">
+                        {role.name}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-slate-500">
                         {role.description || "Sin descripción"}
                       </span>
                     </span>
@@ -130,46 +126,71 @@ export default async function UserPage({
                 ))}
               </div>
 
-              <button
-                type="submit"
-                className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-              >
-                Guardar roles
-              </button>
-            </>
+              <div className="mt-6 flex justify-end">
+                <button
+                  type="submit"
+                  className="w-full rounded-xl bg-red-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800 sm:w-auto"
+                >
+                  Guardar roles
+                </button>
+              </div>
+            </form>
           )}
-        </form>
-      ) : null}
+        </ContentPanel>
+      ) : (
+        <ContentPanel
+          title="Roles asignados"
+          description="Tu nivel de acceso permite consultar, pero no modificar estas asignaciones."
+        >
+          <div className="flex flex-wrap gap-2 p-5 sm:p-6">
+            {user.roles.length > 0 ? (
+              user.roles.map(({ role }) => (
+                <StatusBadge
+                  key={role.id}
+                  tone={role.isActive ? "info" : "neutral"}
+                >
+                  {role.name}
+                </StatusBadge>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">Sin roles asignados.</p>
+            )}
+          </div>
+        </ContentPanel>
+      )}
 
       {canManageUsers ? (
-        <form
-          action={setUserActiveAction}
-          className="mt-8 rounded-xl border border-slate-200 bg-white p-6"
+        <ContentPanel
+          title="Estado de la cuenta"
+          description="Un usuario inactivo no puede iniciar sesión ni obtener permisos."
         >
-          <input type="hidden" name="userId" value={user.id} />
-          <input
-            type="hidden"
-            name="isActive"
-            value={user.isActive ? "false" : "true"}
-          />
-          <h2 className="font-semibold">Estado del usuario</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Un usuario inactivo no puede iniciar sesión ni obtener permisos.
-          </p>
-          <button
-            type="submit"
-            disabled={isSelf}
-            className="mt-4 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {user.isActive ? "Desactivar usuario" : "Activar usuario"}
-          </button>
-          {isSelf ? (
-            <p className="mt-2 text-xs text-slate-500">
-              No puedes cambiar el estado de tu propia cuenta.
-            </p>
-          ) : null}
-        </form>
+          <form action={setUserActiveAction} className="p-5 sm:p-6">
+            <input type="hidden" name="userId" value={user.id} />
+            <input
+              type="hidden"
+              name="isActive"
+              value={user.isActive ? "false" : "true"}
+            />
+
+            {isSelf ? (
+              <p className="text-sm text-slate-500">
+                No puedes cambiar el estado de tu propia cuenta.
+              </p>
+            ) : (
+              <button
+                type="submit"
+                className={
+                  user.isActive
+                    ? "rounded-xl border border-red-200 bg-red-50 px-5 py-2.5 text-sm font-bold text-red-700 transition hover:bg-red-100"
+                    : "rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
+                }
+              >
+                {user.isActive ? "Desactivar usuario" : "Activar usuario"}
+              </button>
+            )}
+          </form>
+        </ContentPanel>
       ) : null}
-    </section>
+    </div>
   );
 }
