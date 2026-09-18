@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 
+import { appConfig } from "@/lib/app-config";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "SIBOR",
-    template: "%s | SIBOR",
+    default: appConfig.name,
+    template: `%s | ${appConfig.name}`,
   },
-  description:
-    "Sistema Integral de Bomberos de La Romana.",
+  description: appConfig.fullName,
 };
 
 export default function RootLayout({

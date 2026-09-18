@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { SiborBrand } from "@/components/brand/sibor-brand";
 import { AppFooter } from "@/components/layout/app-footer";
+import { appConfig } from "@/lib/app-config";
 import { canRunInitialSetup } from "@/modules/auth/setup/setup.service";
 
 export const dynamic = "force-dynamic";
@@ -24,10 +25,10 @@ export default async function Home() {
         <SiborBrand />
 
         <p className="mt-10 text-sm font-semibold uppercase tracking-[0.2em] text-red-700">
-          Cuerpo de Bomberos de La Romana
+          {appConfig.organization}
         </p>
         <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
-          Sistema Integral de Bomberos de La Romana
+          {appConfig.fullName}
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
           Plataforma institucional preparada para crecer mediante módulos

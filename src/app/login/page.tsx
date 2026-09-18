@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { SiborBrand } from "@/components/brand/sibor-brand";
 import { AppFooter } from "@/components/layout/app-footer";
+import { appConfig } from "@/lib/app-config";
 import { loginAction } from "@/modules/auth/login.actions";
 import { canRunInitialSetup } from "@/modules/auth/setup/setup.service";
 
@@ -40,7 +41,7 @@ export default async function LoginPage({
             Acceso institucional
           </h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Utiliza las credenciales administradas por SIBOR.
+            Utiliza las credenciales administradas por {appConfig.name}.
           </p>
 
           {params.setup === "1" ? (
@@ -93,7 +94,7 @@ export default async function LoginPage({
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-slate-900 px-4 py-2.5 font-medium text-white hover:bg-slate-800"
+              className="w-full rounded-lg bg-red-700 px-4 py-2.5 font-medium text-white hover:bg-red-800"
             >
               Iniciar sesión
             </button>
