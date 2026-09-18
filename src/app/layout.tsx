@@ -3,9 +3,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CBLR-WEB",
+  title: {
+    default: "SIBOR",
+    template: "%s | SIBOR",
+  },
   description:
-    "Plataforma web institucional del Cuerpo de Bomberos de La Romana.",
+    "Sistema Integral de Bomberos de La Romana.",
 };
 
 export default function RootLayout({

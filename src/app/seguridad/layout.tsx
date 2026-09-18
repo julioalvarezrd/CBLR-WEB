@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { SiborBrand } from "@/components/brand/sibor-brand";
+import { AppFooter } from "@/components/layout/app-footer";
 import { logoutAction } from "@/modules/auth/login.actions";
 import { getAuthorizationContext } from "@/modules/auth/permissions/authorization";
 
@@ -18,14 +20,17 @@ export default async function SecurityLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
-          <div>
-            <Link href="/seguridad" className="font-bold">
-              CBLR-WEB · Seguridad
+          <div className="flex items-center gap-4">
+            <Link href="/seguridad" aria-label="Ir al inicio de Seguridad">
+              <SiborBrand compact />
             </Link>
-            <p className="text-xs text-slate-500">{context.user.email}</p>
+            <div className="hidden border-l border-slate-200 pl-4 sm:block">
+              <p className="text-sm font-semibold text-slate-700">Seguridad</p>
+              <p className="text-xs text-slate-500">{context.user.email}</p>
+            </div>
           </div>
 
           <form action={logoutAction}>
@@ -39,7 +44,7 @@ export default async function SecurityLayout({
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-6 py-8 md:grid-cols-[220px_1fr]">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-6 px-6 py-8 md:grid-cols-[220px_1fr]">
         <aside className="rounded-xl border border-slate-200 bg-white p-3">
           <nav className="space-y-1 text-sm">
             <Link
@@ -79,6 +84,8 @@ export default async function SecurityLayout({
 
         <main>{children}</main>
       </div>
+
+      <AppFooter className="border-t border-slate-200 bg-white" />
     </div>
   );
 }
