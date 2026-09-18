@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { BackLink } from "@/components/ui/back-link";
 import { ContentPanel } from "@/components/ui/content-panel";
 import { ModuleHeader } from "@/components/ui/module-header";
@@ -140,12 +142,12 @@ export default async function NewUserPage({
         )}
 
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <a
+          <Link
             href="/seguridad/usuarios"
             className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Cancelar
-          </a>
+          </Link>
           <button
             type="submit"
             className="inline-flex items-center justify-center rounded-xl bg-red-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800"
