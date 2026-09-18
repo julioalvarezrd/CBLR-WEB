@@ -148,6 +148,9 @@ export async function updateRole(
   input: Pick<RoleInput, "name" | "description">,
 ) {
   const actor = await requirePermission("roles.manage");
+  const currentPermissions = await getRolePermissions(roleId);
+
+  assertCanDelegatePermissions(actor, currentPermissions);
 
   const name = normalizeRoleName(input.name);
   const nameNormalized = normalizeRoleNameKey(name);
@@ -256,6 +259,9 @@ export async function setRoleActive(
   isActive: boolean,
 ): Promise<void> {
   const actor = await requirePermission("roles.manage");
+  const currentPermissions = await getRolePermissions(roleId);
+
+  assertCanDelegatePermissions(actor, currentPermissions);
 
   await prisma.$transaction(async (tx) => {
     const before = await tx.role.findUnique({
