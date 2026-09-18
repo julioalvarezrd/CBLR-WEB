@@ -11,6 +11,10 @@ export function SiborBrand({
   compact = false,
   className = "",
 }: SiborBrandProps) {
+  const imageClassName = compact
+    ? "h-auto w-[150px] object-contain sm:w-[180px]"
+    : "mx-auto h-auto w-full max-w-[340px] object-contain";
+
   return (
     <div
       className={`flex items-center ${className}`}
@@ -22,11 +26,16 @@ export function SiborBrand({
         width={compact ? 180 : 340}
         height={compact ? 56 : 106}
         priority={!compact}
-        className={
-          compact
-            ? "h-auto w-[150px] object-contain sm:w-[180px]"
-            : "mx-auto h-auto w-full max-w-[340px] object-contain"
-        }
+        className={`${imageClassName} dark:hidden`}
+      />
+      <Image
+        src={appConfig.brand.darkLogoPath}
+        alt=""
+        aria-hidden="true"
+        width={compact ? 180 : 340}
+        height={compact ? 56 : 106}
+        priority={!compact}
+        className={`hidden ${imageClassName} dark:block`}
       />
     </div>
   );
