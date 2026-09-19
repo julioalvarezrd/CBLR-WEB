@@ -7,6 +7,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum StationType {
+  HEADQUARTERS
+  SUBSTATION
+}
+
 model User {
   id             String   @id @default(cuid())
   email          String   @unique
@@ -95,4 +100,90 @@ model AuditLog {
   @@index([actorUserId])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+model Station {
+  id        String      @id @default(cuid())
+  code      String      @unique
+  name      String
+  type      StationType
+  address   String?
+  phone     String?
+  isActive  Boolean     @default(true)
+  sortOrder Int         @default(0)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  parentId    String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent    Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Department[] @relation("DepartmentHierarchy")
+  positions Position[]
+
+  @@unique([name, parentId])
+  @@index([parentId])
+  @@index([isActive, sortOrder])
+}
+
+model Position {
+  id           String   @id @default(cuid())
+  name         String
+  departmentId String?
+  description  String?
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  @@unique([name, departmentId])
+  @@index([departmentId])
+  @@index([isActive, sortOrder])
+}
+
+model Rank {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String
+  hierarchy Int      @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, hierarchy])
+}
+
+model OperationalCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String
+  category    String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category, isActive, sortOrder])
+}
+
+model InstitutionalSettings {
+  id               Int      @id @default(1)
+  organizationName String
+  shortName        String
+  address          String?
+  phone            String?
+  email            String?
+  updatedAt        DateTime @updatedAt
 }
