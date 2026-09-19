@@ -11,6 +11,7 @@ import {
   normalizeRoleNameKey,
   validatePassword,
 } from "@/modules/auth/validations";
+import { syncInitialInstitutionalCatalog } from "@/modules/institutional-catalog/bootstrap.service";
 
 const INITIAL_ROLE_NAME = "Administración de seguridad";
 
@@ -38,78 +39,41 @@ export async function initializeSecurity(input: {
   await prisma.$transaction(
     async (tx) => {
       if ((await tx.user.count()) > 0) {
-        throw new ConflictError(
-          "La configuración inicial ya fue completada.",
-        );
+        throw new ConflictError("La configuración inicial ya fue completada.");
       }
 
       const role = await tx.role.upsert({
-        where: {
-          nameNormalized: normalizeRoleNameKey(INITIAL_ROLE_NAME),
-        },
+        where: { nameNormalized: normalizeRoleNameKey(INITIAL_ROLE_NAME) },
         create: {
           name: INITIAL_ROLE_NAME,
           nameNormalized: normalizeRoleNameKey(INITIAL_ROLE_NAME),
-          description:
-            "Rol inicial creado durante la configuración de seguridad.",
+          description: "Rol inicial creado durante la configuración de seguridad.",
         },
-        update: {
-          isActive: true,
-        },
-        select: {
-          id: true,
-          name: true,
-        },
+        update: { isActive: true },
+        select: { id: true, name: true },
       });
 
       const user = await tx.user.create({
-        data: {
-          name,
-          email,
-          passwordHash,
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-        },
+        data: { name, email, passwordHash },
+        select: { id: true, name: true, email: true },
       });
 
-      await tx.userRole.create({
-        data: {
-          userId: user.id,
-          roleId: role.id,
-          assignedById: user.id,
-        },
-      });
-
-      await tx.rolePermission.deleteMany({
-        where: { roleId: role.id },
-      });
-
-      await tx.rolePermission.createMany({
-        data: PERMISSIONS.map((permission) => ({
-          roleId: role.id,
-          permissionKey: permission.key,
-          assignedById: user.id,
-        })),
-      });
+      await tx.userRole.create({ data: { userId: user.id, roleId: role.id, assignedById: user.id } });
+      await tx.rolePermission.deleteMany({ where: { roleId: role.id } });
+      await tx.rolePermission.createMany({ data: PERMISSIONS.map((permission) => ({ roleId: role.id, permissionKey: permission.key, assignedById: user.id })) });
 
       await writeAudit(tx, {
         actorUserId: user.id,
         action: "security.initialized",
         entityType: "User",
         entityId: user.id,
-        after: {
-          email: user.email,
-          roleId: role.id,
-          roleName: role.name,
-          permissionKeys: PERMISSIONS.map((permission) => permission.key),
-        },
+        after: { email: user.email, roleId: role.id, roleName: role.name, permissionKeys: PERMISSIONS.map((permission) => permission.key) },
       });
     },
-    {
-      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
   );
+
+  // Catalog initialization is idempotent and intentionally runs after the
+  // security transaction so a catalog failure cannot leave a partial admin.
+  await syncInitialInstitutionalCatalog();
 }
