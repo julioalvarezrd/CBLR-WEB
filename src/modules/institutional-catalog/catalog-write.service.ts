@@ -10,6 +10,7 @@ type DepartmentInput = { name: string; description?: string; parentId?: string |
 type PositionInput = { name: string; departmentId?: string | null; description?: string; sortOrder: number };
 type RankInput = { name: string; category: string; hierarchy: number };
 type OperationalCodeInput = { code: string; description: string; category: string; sortOrder: number };
+export type CatalogEntity = "station" | "department" | "position" | "rank" | "operationalCode";
 
 export async function createStation(input: StationInput) {
   const actor = await requirePermission("catalogo.manage");
@@ -50,13 +51,10 @@ export async function createOperationalCode(input: OperationalCodeInput) {
   return prisma.$transaction(async (tx) => { const after = await tx.operationalCode.create({ data }); await writeAudit(tx, { actorUserId: actor.user.id, action: "catalog.operational-code.created", entityType: "OperationalCode", entityId: after.id, after }); return after; });
 }
 
-export async function setCatalogItemActive(entity: "station" | "department" | "position" | "rank" | "operationalCode", id: string, isActive: boolean): Promise<void> {
+export async function setCatalogItemActive(entity: CatalogEntity, id: string, isActive: boolean): Promise<void> {
   const actor = await requirePermission("catalogo.manage");
   await prisma.$transaction(async (tx) => {
-    const delegates = { station: tx.station, department: tx.department, position: tx.position, rank: tx.rank, operationalCode: tx.operationalCode } as const;
-    const delegate = delegates[entity];
-    // Prisma delegates have different model-specific signatures, so branch explicitly to preserve strict typing.
-    let before: { id: string; isActive: boolean } | null = null;
+    let before: { id: string; isActive: boolean } | null;
     if (entity === "station") before = await tx.station.findUnique({ where: { id }, select: { id: true, isActive: true } });
     else if (entity === "department") before = await tx.department.findUnique({ where: { id }, select: { id: true, isActive: true } });
     else if (entity === "position") before = await tx.position.findUnique({ where: { id }, select: { id: true, isActive: true } });
@@ -68,7 +66,6 @@ export async function setCatalogItemActive(entity: "station" | "department" | "p
     else if (entity === "position") await tx.position.update({ where: { id }, data: { isActive } });
     else if (entity === "rank") await tx.rank.update({ where: { id }, data: { isActive } });
     else await tx.operationalCode.update({ where: { id }, data: { isActive } });
-    void delegate;
     await writeAudit(tx, { actorUserId: actor.user.id, action: isActive ? "catalog.item.activated" : "catalog.item.deactivated", entityType: entity, entityId: id, before, after: { ...before, isActive } });
   });
 }
