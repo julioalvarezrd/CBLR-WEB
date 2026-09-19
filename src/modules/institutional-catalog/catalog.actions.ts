@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getActionErrorMessage } from "@/modules/auth/action-errors";
-import { createDepartment, createOperationalCode, createPosition, createRank, createStation, setCatalogItemActive, type CatalogEntity } from "@/modules/institutional-catalog/catalog-write.service";
+import { createDepartment, createOperationalCode, createPosition, createRank, createStation, setCatalogItemActive, updateDepartment, updateOperationalCode, updatePosition, updateRank, updateStation, type CatalogEntity } from "@/modules/institutional-catalog/catalog-write.service";
 
 export type CatalogActionState = { error?: string; success?: string };
 const numberValue = (formData: FormData, key: string) => Number(formData.get(key) ?? 0);
@@ -28,4 +28,34 @@ export async function setCatalogItemActiveAction(formData: FormData): Promise<vo
   if (!["station", "department", "position", "rank", "operationalCode"].includes(entity) || !id) return;
   await setCatalogItemActive(entity, id, isActive);
   revalidatePath("/administracion/catalogo");
+}
+
+
+export async function updateCatalogItemAction(_: CatalogActionState, formData: FormData): Promise<CatalogActionState> {
+  try {
+    const entity = textValue(formData, "entity");
+    const id = textValue(formData, "id");
+    if (!id) return { error: "Registro inválido." };
+
+    if (entity === "station") {
+      const type = textValue(formData, "type");
+      if (type !== "HEADQUARTERS" && type !== "SUBSTATION") return { error: "Tipo de estación inválido." };
+      await updateStation(id, { code: textValue(formData, "code"), name: textValue(formData, "name"), type, address: textValue(formData, "address"), phone: textValue(formData, "phone"), sortOrder: numberValue(formData, "sortOrder") });
+    } else if (entity === "department") {
+      await updateDepartment(id, { name: textValue(formData, "name"), description: textValue(formData, "description"), parentId: textValue(formData, "parentId") || null, sortOrder: numberValue(formData, "sortOrder") });
+    } else if (entity === "position") {
+      await updatePosition(id, { name: textValue(formData, "name"), departmentId: textValue(formData, "departmentId") || null, description: textValue(formData, "description"), sortOrder: numberValue(formData, "sortOrder") });
+    } else if (entity === "rank") {
+      await updateRank(id, { name: textValue(formData, "name"), category: textValue(formData, "category"), hierarchy: numberValue(formData, "hierarchy") });
+    } else if (entity === "operationalCode") {
+      await updateOperationalCode(id, { code: textValue(formData, "code"), description: textValue(formData, "description"), category: textValue(formData, "category"), sortOrder: numberValue(formData, "sortOrder") });
+    } else {
+      return { error: "Tipo de catálogo inválido." };
+    }
+
+    revalidatePath("/administracion/catalogo");
+    return { success: "Cambios guardados correctamente." };
+  } catch (error) {
+    return { error: getActionErrorMessage(error) };
+  }
 }
