@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 
 import { appConfig } from "@/lib/app-config";
 
@@ -22,10 +21,10 @@ try {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body>
-        <Script id="sibor-theme" strategy="beforeInteractive">{themeBootstrap}</Script>
-        {children}
-      </body>
+      <head>
+        <script id="sibor-theme" dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }
