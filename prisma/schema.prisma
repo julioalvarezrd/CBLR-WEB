@@ -194,6 +194,7 @@ model InstitutionalSettings {
   timezone           String?
   documentHeaderText String?
   documentFooterText String?
-  logoPath           String?
+  logoData           Bytes?
+  logoMimeType       String?
   updatedAt          DateTime @updatedAt
 }

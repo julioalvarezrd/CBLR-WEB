@@ -6,6 +6,8 @@ import { updateInstitutionalSettings } from "@/modules/institutional-catalog/set
 
 export async function updateInstitutionalSettingsAction(formData: FormData): Promise<void> {
   const text = (key: string) => String(formData.get(key) ?? "");
+  const logoValue = formData.get("logo");
+  const logo = logoValue instanceof File && logoValue.size > 0 ? logoValue : undefined;
 
   try {
     await updateInstitutionalSettings({
@@ -23,6 +25,7 @@ export async function updateInstitutionalSettingsAction(formData: FormData): Pro
       timezone: text("timezone"),
       documentHeaderText: text("documentHeaderText"),
       documentFooterText: text("documentFooterText"),
+      logo,
     });
   } catch (error) {
     redirect(`/administracion/configuracion?error=${encodeURIComponent(getActionErrorMessage(error))}`);
