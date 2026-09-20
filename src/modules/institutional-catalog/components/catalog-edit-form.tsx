@@ -54,7 +54,7 @@ export function CatalogEditForm({ entity, id, isActive, fields }: { entity: Cata
         <input type="hidden" name="entity" value={entity} /><input type="hidden" name="id" value={id} />
         <div className="grid gap-5 sm:grid-cols-2">{fields.map((field) => {
           const fieldId = `edit-${entity}-${id}-${field.name}`;
-          return <div key={field.name}><label htmlFor={fieldId} className="text-sm font-semibold text-slate-700 dark:text-slate-200">{field.label}</label>
+          return <div key={field.name} className="min-w-0"><label htmlFor={fieldId} className="block text-sm font-semibold text-slate-700 dark:text-slate-200">{field.label}</label>
             {field.options ? <select id={fieldId} name={field.name} defaultValue={String(field.value ?? "")} required={field.required} className={inputClass}><option value="">Seleccionar</option>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
             : field.type === "phone" ? <PhoneInput id={fieldId} name={field.name} defaultValue={String(field.value ?? "")} required={field.required} maxLength={field.maxLength ?? 30} placeholder={field.placeholder} className={inputClass} />
             : <input id={fieldId} name={field.name} type={field.type ?? "text"} defaultValue={field.value ?? ""} required={field.required} maxLength={field.maxLength} placeholder={field.placeholder} min={field.type === "number" ? 0 : undefined} className={inputClass} />}</div>;
