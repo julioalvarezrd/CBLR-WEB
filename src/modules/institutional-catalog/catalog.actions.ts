@@ -7,6 +7,7 @@ import { createDepartment, createOperationalCode, createPosition, createRank, cr
 export type CatalogActionState = { error?: string; success?: string };
 const numberValue = (formData: FormData, key: string) => Number(formData.get(key) ?? 0);
 const textValue = (formData: FormData, key: string) => String(formData.get(key) ?? "");
+const catalogPath = (entity: CatalogEntity) => `/administracion/catalogo/${entity === "station" ? "estaciones" : entity === "department" ? "departamentos" : entity === "position" ? "cargos" : entity === "rank" ? "rangos" : "codigos-operativos"}`;
 
 export async function createStationAction(_: CatalogActionState, formData: FormData): Promise<CatalogActionState> {
   try { const type = textValue(formData, "type"); if (type !== "HEADQUARTERS" && type !== "SUBSTATION") return { error: "Tipo de estación inválido." }; await createStation({ code: textValue(formData, "code"), name: textValue(formData, "name"), type, address: textValue(formData, "address"), phone: textValue(formData, "phone"), sortOrder: numberValue(formData, "sortOrder") }); revalidatePath("/administracion/catalogo/estaciones"); return { success: "Estación creada correctamente." }; } catch (error) { return { error: getActionErrorMessage(error) }; }
@@ -27,7 +28,7 @@ export async function setCatalogItemActiveAction(formData: FormData): Promise<vo
   const entity = textValue(formData, "entity") as CatalogEntity; const id = textValue(formData, "id"); const isActive = textValue(formData, "isActive") === "true";
   if (!["station", "department", "position", "rank", "operationalCode"].includes(entity) || !id) return;
   await setCatalogItemActive(entity, id, isActive);
-  revalidatePath("/administracion/catalogo");
+  revalidatePath(catalogPath(entity));
 }
 
 
@@ -53,7 +54,7 @@ export async function updateCatalogItemAction(_: CatalogActionState, formData: F
       return { error: "Tipo de catálogo inválido." };
     }
 
-    revalidatePath("/administracion/catalogo");
+    revalidatePath(catalogPath(entity));
     return { success: "Cambios guardados correctamente." };
   } catch (error) {
     return { error: getActionErrorMessage(error) };
