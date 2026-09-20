@@ -6,10 +6,27 @@ import { updateInstitutionalSettings } from "@/modules/institutional-catalog/set
 
 export async function updateInstitutionalSettingsAction(formData: FormData): Promise<void> {
   const text = (key: string) => String(formData.get(key) ?? "");
+
   try {
-    await updateInstitutionalSettings({ organizationName: text("organizationName"), shortName: text("shortName"), address: text("address"), phone: text("phone"), email: text("email") });
+    await updateInstitutionalSettings({
+      organizationName: text("organizationName"),
+      shortName: text("shortName"),
+      institutionalPrefix: text("institutionalPrefix"),
+      rnc: text("rnc"),
+      phone: text("phone"),
+      email: text("email"),
+      website: text("website"),
+      address: text("address"),
+      municipality: text("municipality"),
+      province: text("province"),
+      country: text("country"),
+      timezone: text("timezone"),
+      documentHeaderText: text("documentHeaderText"),
+      documentFooterText: text("documentFooterText"),
+    });
   } catch (error) {
     redirect(`/administracion/configuracion?error=${encodeURIComponent(getActionErrorMessage(error))}`);
   }
+
   redirect("/administracion/configuracion?saved=1");
 }

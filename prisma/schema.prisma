@@ -179,11 +179,21 @@ model OperationalCode {
 }
 
 model InstitutionalSettings {
-  id               Int      @id @default(1)
-  organizationName String
-  shortName        String
-  address          String?
-  phone            String?
-  email            String?
-  updatedAt        DateTime @updatedAt
+  id                 Int      @id @default(1)
+  organizationName   String
+  shortName          String
+  institutionalPrefix String?
+  rnc                String?
+  phone              String?
+  email              String?
+  website            String?
+  address            String?
+  municipality       String?
+  province           String?
+  country            String?
+  timezone           String?
+  documentHeaderText String?
+  documentFooterText String?
+  logoPath           String?
+  updatedAt          DateTime @updatedAt
 }
