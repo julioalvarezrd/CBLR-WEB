@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { updateCatalogItemAction, type CatalogActionState } from "@/modules/institutional-catalog/catalog.actions";
 import type { CatalogEntity } from "@/modules/institutional-catalog/catalog-write.service";
@@ -22,9 +22,6 @@ export function CatalogEditForm({ entity, id, fields }: { entity: CatalogEntity;
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(updateCatalogItemAction, {} as CatalogActionState);
 
-  useEffect(() => {
-    if (state.success) setOpen(false);
-  }, [state.success]);
 
   return <>
     <button type="button" onClick={() => setOpen(true)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Editar</button>
