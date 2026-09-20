@@ -1,5 +1,6 @@
 import type { StationType } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { normalizePhone } from "@/lib/phone";
 import { writeAudit } from "@/modules/auth/audit.service";
 import { ConflictError, ValidationError } from "@/modules/auth/errors";
 import { requirePermission } from "@/modules/auth/permissions/authorization";
@@ -14,7 +15,7 @@ export type CatalogEntity = "station" | "department" | "position" | "rank" | "op
 
 export async function createStation(input: StationInput) {
   const actor = await requirePermission("catalogo.manage");
-  const data = { code: normalizedCode(input.code), name: requiredText(input.name, "Nombre"), type: input.type, address: optionalText(input.address, "Dirección"), phone: optionalText(input.phone, "Teléfono", 40), sortOrder: positiveOrder(input.sortOrder) };
+  const data = { code: normalizedCode(input.code), name: requiredText(input.name, "Nombre"), type: input.type, address: optionalText(input.address, "Dirección"), phone: normalizePhone(input.phone), sortOrder: positiveOrder(input.sortOrder) };
   if (await prisma.station.findUnique({ where: { code: data.code }, select: { id: true } })) throw new ConflictError("Ya existe una estación con ese código.");
   return prisma.$transaction(async (tx) => { const after = await tx.station.create({ data }); await writeAudit(tx, { actorUserId: actor.user.id, action: "catalog.station.created", entityType: "Station", entityId: after.id, after }); return after; });
 }
@@ -73,7 +74,7 @@ export async function setCatalogItemActive(entity: CatalogEntity, id: string, is
 
 export async function updateStation(id: string, input: StationInput) {
   const actor = await requirePermission("catalogo.manage");
-  const data = { code: normalizedCode(input.code), name: requiredText(input.name, "Nombre"), type: input.type, address: optionalText(input.address, "Dirección"), phone: optionalText(input.phone, "Teléfono", 40), sortOrder: positiveOrder(input.sortOrder) };
+  const data = { code: normalizedCode(input.code), name: requiredText(input.name, "Nombre"), type: input.type, address: optionalText(input.address, "Dirección"), phone: normalizePhone(input.phone), sortOrder: positiveOrder(input.sortOrder) };
   const duplicate = await prisma.station.findFirst({ where: { code: data.code, NOT: { id } }, select: { id: true } });
   if (duplicate) throw new ConflictError("Ya existe otra estación con ese código.");
   return prisma.$transaction(async (tx) => {
