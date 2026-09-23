@@ -83,6 +83,7 @@ export async function syncInitialInstitutionalCatalog(): Promise<void> {
         id: 1,
         organizationName: "Cuerpo de Bomberos de La Romana",
         shortName: "SIBOR",
+        institutionalPrefix: "CBLR",
       },
       update: {},
     });

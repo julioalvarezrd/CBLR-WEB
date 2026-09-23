@@ -57,6 +57,9 @@ export async function AuthenticatedApp({ children }: AuthenticatedAppProps) {
 
   const navigation: AppNavigationGroup[] = [
     { label: "Inicio", href: "/inicio" },
+    ...(context.permissions.has("personal.view")
+      ? [{ label: "Personal", href: "/personal" }]
+      : []),
     ...(administrationItems.length > 0
       ? [{ label: "Administración", items: administrationItems }]
       : []),
