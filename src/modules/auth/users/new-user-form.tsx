@@ -164,6 +164,8 @@ export function NewUserForm({ roles, canAssignRoles }: NewUserFormProps) {
                   }}
                   placeholder="Ej. 26-CBLR-001"
                   autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
                   className={inputClassName}
                   required
                 />
