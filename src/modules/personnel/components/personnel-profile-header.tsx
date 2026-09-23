@@ -82,16 +82,30 @@ export function PersonnelProfileHeader({
         </div>
 
         {canEdit ? (
-          <Link
-            href={`/personal/${memberId}/editar`}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-red-300 hover:text-red-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-red-800 dark:hover:text-red-400"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-none stroke-current" strokeWidth="2">
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
-            </svg>
-            Editar
-          </Link>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <Link
+              href={`/personal/${memberId}/movimientos`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-none stroke-current" strokeWidth="2">
+                <path d="M7 7h11l-3-3" />
+                <path d="m18 7-3 3" />
+                <path d="M17 17H6l3 3" />
+                <path d="m6 17 3-3" />
+              </svg>
+              Movimientos
+            </Link>
+            <Link
+              href={`/personal/${memberId}/editar`}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:border-red-300 hover:text-red-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-red-800 dark:hover:text-red-400"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-none stroke-current" strokeWidth="2">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
+              </svg>
+              Editar
+            </Link>
+          </div>
         ) : null}
       </div>
     </section>

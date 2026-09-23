@@ -22,6 +22,12 @@ function formatDate(value: Date | null): string {
   return value ? dateFormatter.format(value) : "No registrado";
 }
 
+function formatPeriod(effectiveFrom: Date, effectiveTo: Date | null): string {
+  return effectiveTo
+    ? `${dateFormatter.format(effectiveFrom)} – ${dateFormatter.format(effectiveTo)}`
+    : `Desde ${dateFormatter.format(effectiveFrom)} · Vigente`;
+}
+
 function DetailItem({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
@@ -46,7 +52,7 @@ function ValuesList({ values }: { values: string[] }) {
 
 type PersonnelDetailPageProps = {
   params: Promise<{ memberId: string }>;
-  searchParams: Promise<{ saved?: string; updated?: string }>;
+  searchParams: Promise<{ saved?: string; updated?: string; movement?: string }>;
 };
 
 export default async function PersonnelDetailPage({ params, searchParams }: PersonnelDetailPageProps) {
@@ -73,6 +79,12 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
         photoVersion={member.updatedAt.getTime()}
         canEdit={canEdit}
       />
+
+      {query.movement ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+          Movimiento institucional registrado correctamente. El historial anterior fue cerrado y el nuevo movimiento quedó vigente.
+        </div>
+      ) : null}
 
       {query.updated === "1" ? (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
@@ -193,37 +205,65 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
         </dl>
       </ContentPanel>
 
-      <ContentPanel title="Historial institucional inicial" description="Estos registros se crean automáticamente al registrar al miembro.">
-        <div className="grid gap-6 p-5 lg:grid-cols-3 sm:p-6">
+      <ContentPanel
+        title="Historial institucional"
+        description="Trayectoria de tipo de personal, rango, asignación y estado. Los movimientos vigentes no tienen fecha de cierre."
+      >
+        <div className="grid gap-6 p-5 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Tipo de personal</h3>
             <div className="mt-3 space-y-2">
               {member.typeHistory.map((entry) => (
                 <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
                   <p className="font-semibold text-slate-800 dark:text-slate-200">{PERSONNEL_TYPE_LABELS[entry.personnelType]}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Desde {formatDate(entry.effectiveFrom)}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
                 </div>
               ))}
             </div>
           </div>
+
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Rango</h3>
             <div className="mt-3 space-y-2">
               {member.rankHistory.map((entry) => (
                 <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
                   <p className="font-semibold text-slate-800 dark:text-slate-200">{entry.rank.name}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Desde {formatDate(entry.effectiveFrom)}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
+                  {entry.reason ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{entry.reason}</p> : null}
                 </div>
               ))}
             </div>
           </div>
+
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white">Departamento / cargo</h3>
             <div className="mt-3 space-y-2">
               {member.assignmentHistory.map((entry) => (
                 <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
                   <p className="font-semibold text-slate-800 dark:text-slate-200">{entry.department?.name || "Sin departamento"}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{entry.position?.name || "Sin cargo"} · Desde {formatDate(entry.effectiveFrom)}</p>
+                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">{entry.position?.name || "Sin cargo"}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
+                  {entry.reason ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{entry.reason}</p> : null}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Estado</h3>
+            <div className="mt-3 space-y-2">
+              {member.statusHistory.map((entry) => (
+                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">
+                      {entry.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                    </p>
+                    <StatusBadge tone={entry.status === "ACTIVE" ? "success" : "neutral"}>
+                      {entry.status === "ACTIVE" ? "Activo" : "Inactivo"}
+                    </StatusBadge>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
+                  {entry.reason ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{entry.reason}</p> : null}
                 </div>
               ))}
             </div>
