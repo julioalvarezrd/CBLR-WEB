@@ -60,6 +60,12 @@ enum EducationLevel {
   OTHER
 }
 
+enum PersonnelHourCategory {
+  GUARD
+  OPERATION
+  VOLUNTEER_SERVICE
+}
+
 model User {
   id                String   @id @default(cuid())
   username          String   @unique
@@ -165,6 +171,10 @@ model Station {
   sortOrder Int         @default(0)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  personnelMembers       PersonnelMember[]
+  personnelHistory       PersonnelStationHistory[]
+  personnelHourEntries   PersonnelHourEntry[]
 
   @@index([isActive, sortOrder])
 }
@@ -275,6 +285,7 @@ model PersonnelMember {
   rankId                   String
   departmentId             String?
   positionId               String?
+  stationId                String?
   historicalHours          Decimal         @default(0) @db.Decimal(10, 2)
   firstNames               String
   lastNames                String
@@ -325,13 +336,16 @@ model PersonnelMember {
   rank            Rank             @relation(fields: [rankId], references: [id], onDelete: Restrict)
   department      Department?      @relation(fields: [departmentId], references: [id], onDelete: Restrict)
   position        Position?        @relation(fields: [positionId], references: [id], onDelete: Restrict)
+  station         Station?         @relation(fields: [stationId], references: [id], onDelete: Restrict)
   createdBy       User             @relation("PersonnelMemberCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
   recommender     PersonnelMember? @relation("PersonnelRecommendations", fields: [recommendedByMemberId], references: [id], onDelete: SetNull)
   recommendations PersonnelMember[] @relation("PersonnelRecommendations")
   typeHistory     PersonnelTypeHistory[]
   rankHistory     PersonnelRankHistory[]
   assignmentHistory PersonnelAssignmentHistory[]
+  stationHistory    PersonnelStationHistory[]
   statusHistory     PersonnelStatusHistory[]
+  hourEntries       PersonnelHourEntry[]
   user              User? @relation("UserPersonnelMember")
 
   @@unique([codeYear, codeSequence])
@@ -340,6 +354,7 @@ model PersonnelMember {
   @@index([rankId])
   @@index([departmentId])
   @@index([positionId])
+  @@index([stationId])
   @@index([recommendedByMemberId])
   @@index([createdByUserId])
 }
@@ -407,4 +422,41 @@ model PersonnelStatusHistory {
 
   @@index([memberId, effectiveFrom])
   @@index([status])
+}
+
+
+model PersonnelStationHistory {
+  id            String   @id @default(cuid())
+  memberId      String
+  stationId     String
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  reason        String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  member  PersonnelMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  station Station         @relation(fields: [stationId], references: [id], onDelete: Restrict)
+
+  @@index([memberId, effectiveFrom])
+  @@index([stationId])
+}
+
+model PersonnelHourEntry {
+  id          String                @id @default(cuid())
+  memberId    String
+  category    PersonnelHourCategory
+  minutes     Int
+  occurredAt  DateTime
+  confirmedAt DateTime?
+  stationId   String?
+  notes       String?               @db.Text
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  member  PersonnelMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  station Station?         @relation(fields: [stationId], references: [id], onDelete: Restrict)
+
+  @@index([memberId, category, occurredAt])
+  @@index([stationId, occurredAt])
+  @@index([confirmedAt])
 }
