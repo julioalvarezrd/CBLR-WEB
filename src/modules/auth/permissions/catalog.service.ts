@@ -4,6 +4,7 @@ import {
   type PermissionKey,
 } from "@/modules/auth/permissions/catalog";
 import { requirePermission } from "@/modules/auth/permissions/authorization";
+import { resolvePagination, type PaginationInput } from "@/lib/pagination";
 
 export async function syncPermissionCatalog(): Promise<void> {
   await Promise.all(
@@ -50,4 +51,42 @@ export function parsePermissionKeys(values: readonly string[]): PermissionKey[] 
   const allowed = new Set<string>(PERMISSIONS.map((permission) => permission.key));
 
   return values.filter((value): value is PermissionKey => allowed.has(value));
+}
+
+
+export async function paginatePermissions(input: PaginationInput = {}) {
+  await requirePermission("roles.view");
+
+  const total = await prisma.permission.count();
+  const pagination = resolvePagination(total, input);
+  const items = await prisma.permission.findMany({
+    skip: (pagination.page - 1) * pagination.pageSize,
+    take: pagination.pageSize,
+    orderBy: [{ module: "asc" }, { action: "asc" }],
+    select: {
+      key: true,
+      module: true,
+      action: true,
+      label: true,
+      description: true,
+      critical: true,
+    },
+  });
+
+  return { items, ...pagination };
+}
+
+export async function getPermissionCounts() {
+  await requirePermission("roles.view");
+
+  const [total, critical, modules] = await Promise.all([
+    prisma.permission.count(),
+    prisma.permission.count({ where: { critical: true } }),
+    prisma.permission.findMany({
+      distinct: ["module"],
+      select: { module: true },
+    }),
+  ]);
+
+  return { total, critical, modules: modules.length };
 }
