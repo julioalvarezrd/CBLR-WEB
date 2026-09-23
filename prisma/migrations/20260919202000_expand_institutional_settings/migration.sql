@@ -9,8 +9,7 @@ ALTER TABLE "InstitutionalSettings"
   ADD COLUMN "timezone" TEXT,
   ADD COLUMN "documentHeaderText" TEXT,
   ADD COLUMN "documentFooterText" TEXT,
-  ADD COLUMN "logoData" BYTEA,
-  ADD COLUMN "logoMimeType" TEXT;
+  ADD COLUMN "logoPath" TEXT;
 
 UPDATE "InstitutionalSettings"
 SET
