@@ -46,6 +46,7 @@ export default async function PersonnelMovementsPage({
       <PersonnelMovements
         member={{
           id: member.id,
+          personnelType: member.personnelType,
           status: member.status,
           rankId: member.rankId,
           departmentId: member.departmentId,
@@ -53,6 +54,7 @@ export default async function PersonnelMovementsPage({
           rankName: member.rank.name,
           departmentName: member.department?.name ?? null,
           positionName: member.position?.name ?? null,
+          typeEffectiveFrom: dateFormatter.format(member.typeHistory[0].effectiveFrom),
           rankEffectiveFrom: dateFormatter.format(member.rankHistory[0].effectiveFrom),
           assignmentEffectiveFrom: dateFormatter.format(
             member.assignmentHistory[0].effectiveFrom,

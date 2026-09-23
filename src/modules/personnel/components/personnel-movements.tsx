@@ -7,6 +7,7 @@ import {
   changePersonnelAssignmentAction,
   changePersonnelRankAction,
   changePersonnelStatusAction,
+  changePersonnelTypeAction,
 } from "@/modules/personnel/movements.actions";
 
 type RankOption = {
@@ -30,6 +31,7 @@ type PositionOption = {
 type PersonnelMovementsProps = {
   member: {
     id: string;
+    personnelType: "VOLUNTEER" | "FIXED";
     status: "ACTIVE" | "INACTIVE";
     rankId: string;
     departmentId: string | null;
@@ -37,6 +39,7 @@ type PersonnelMovementsProps = {
     rankName: string;
     departmentName: string | null;
     positionName: string | null;
+    typeEffectiveFrom: string;
     rankEffectiveFrom: string;
     assignmentEffectiveFrom: string;
     statusEffectiveFrom: string;
@@ -83,11 +86,63 @@ export function PersonnelMovements({
     [departmentId, positions],
   );
 
+  const targetType = member.personnelType === "VOLUNTEER" ? "FIXED" : "VOLUNTEER";
+  const currentTypeLabel = member.personnelType === "VOLUNTEER" ? "Voluntario" : "Fijo";
+  const targetTypeLabel = targetType === "VOLUNTEER" ? "Voluntario" : "Fijo";
   const targetStatus = member.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
   const targetStatusLabel = targetStatus === "ACTIVE" ? "Activo" : "Inactivo";
 
   return (
     <div className="space-y-6">
+      <ContentPanel
+        title="Cambio de tipo de personal"
+        description="Cambia entre Voluntario y Fijo conservando el rango, la asignación y el estado actuales."
+      >
+        <form action={changePersonnelTypeAction} className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
+          <input type="hidden" name="memberId" value={member.id} />
+          <input type="hidden" name="personnelType" value={targetType} />
+
+          <CurrentValue
+            label="Tipo actual"
+            value={currentTypeLabel}
+            since={member.typeEffectiveFrom}
+          />
+
+          <div>
+            <label className={labelClassName}>Nuevo tipo</label>
+            <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
+              {targetTypeLabel}
+            </div>
+            <p className={hintClassName}>Este movimiento no modifica automáticamente el rango del miembro.</p>
+          </div>
+
+          <div>
+            <label htmlFor="typeEffectiveDate" className={labelClassName}>Fecha efectiva</label>
+            <input id="typeEffectiveDate" name="effectiveDate" type="date" required className={inputClassName} />
+            <p className={hintClassName}>Debe ser posterior al inicio del tipo de personal vigente.</p>
+          </div>
+
+          <div className="lg:col-span-3">
+            <label htmlFor="typeReason" className={labelClassName}>Motivo</label>
+            <textarea
+              id="typeReason"
+              name="reason"
+              rows={3}
+              maxLength={1000}
+              required
+              placeholder={targetType === "FIXED" ? "Ej. Incorporación al personal fijo..." : "Ej. Cambio a condición voluntaria..."}
+              className={inputClassName}
+            />
+          </div>
+
+          <div className="lg:col-span-3 flex justify-end">
+            <button type="submit" className="rounded-xl bg-red-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-red-800">
+              Cambiar tipo a {targetTypeLabel}
+            </button>
+          </div>
+        </form>
+      </ContentPanel>
+
       <ContentPanel
         title="Cambio de rango"
         description="Cierra el rango vigente y abre un nuevo período en el historial del miembro."

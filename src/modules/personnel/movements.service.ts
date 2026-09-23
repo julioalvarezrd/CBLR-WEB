@@ -8,6 +8,10 @@ type MovementInput = {
   reason: string;
 };
 
+export type PersonnelTypeMovementInput = MovementInput & {
+  personnelType: string;
+};
+
 export type RankMovementInput = MovementInput & {
   rankId: string;
 };
@@ -76,6 +80,7 @@ export async function getPersonnelMovementOptions(memberId: string) {
         firstNames: true,
         lastNames: true,
         admissionDate: true,
+        personnelType: true,
         status: true,
         rankId: true,
         departmentId: true,
@@ -83,6 +88,12 @@ export async function getPersonnelMovementOptions(memberId: string) {
         rank: { select: { name: true } },
         department: { select: { name: true } },
         position: { select: { name: true } },
+        typeHistory: {
+          where: { effectiveTo: null },
+          orderBy: { effectiveFrom: "desc" },
+          take: 1,
+          select: { effectiveFrom: true },
+        },
         rankHistory: {
           where: { effectiveTo: null },
           orderBy: { effectiveFrom: "desc" },
@@ -122,6 +133,7 @@ export async function getPersonnelMovementOptions(memberId: string) {
 
   if (!member) throw new ValidationError("El miembro indicado no existe.");
   if (
+    member.typeHistory.length === 0 ||
     member.rankHistory.length === 0 ||
     member.assignmentHistory.length === 0 ||
     member.statusHistory.length === 0
@@ -132,6 +144,81 @@ export async function getPersonnelMovementOptions(memberId: string) {
   }
 
   return { member, ranks, departments, positions };
+}
+
+export async function changePersonnelType(
+  memberId: string,
+  input: PersonnelTypeMovementInput,
+) {
+  const actor = await requirePermission("personal.edit");
+  const effectiveDate = parseEffectiveDate(input.effectiveDate);
+  const reason = normalizeReason(input.reason);
+
+  if (input.personnelType !== "VOLUNTEER" && input.personnelType !== "FIXED") {
+    throw new ValidationError("El tipo de personal seleccionado no es válido.");
+  }
+  const personnelType = input.personnelType;
+
+  return prisma.$transaction(async (tx) => {
+    const member = await tx.personnelMember.findUnique({
+      where: { id: memberId },
+      select: {
+        id: true,
+        admissionDate: true,
+        personnelType: true,
+      },
+    });
+    if (!member) throw new ValidationError("El miembro indicado no existe.");
+    if (member.personnelType === personnelType) {
+      throw new ValidationError(
+        "El nuevo tipo de personal debe ser diferente al tipo actual.",
+      );
+    }
+
+    const currentHistory = await tx.personnelTypeHistory.findFirst({
+      where: { memberId, effectiveTo: null },
+      orderBy: { effectiveFrom: "desc" },
+      select: { id: true, effectiveFrom: true },
+    });
+    if (!currentHistory) {
+      throw new ValidationError(
+        "No existe un historial de tipo de personal vigente para este miembro.",
+      );
+    }
+
+    validateEffectiveDate(
+      member.admissionDate,
+      currentHistory.effectiveFrom,
+      effectiveDate,
+    );
+
+    await tx.personnelTypeHistory.update({
+      where: { id: currentHistory.id },
+      data: { effectiveTo: previousDay(effectiveDate) },
+    });
+    await tx.personnelMember.update({
+      where: { id: memberId },
+      data: { personnelType },
+    });
+    await tx.personnelTypeHistory.create({
+      data: {
+        memberId,
+        personnelType,
+        effectiveFrom: effectiveDate,
+        reason,
+      },
+    });
+
+    await writeAudit(tx, {
+      actorUserId: actor.user.id,
+      action: "personnel.type.changed",
+      entityType: "PersonnelMember",
+      entityId: memberId,
+      before: { personnelType: member.personnelType },
+      after: { personnelType },
+      metadata: { effectiveDate: input.effectiveDate, reason },
+    });
+  });
 }
 
 export async function changePersonnelRank(

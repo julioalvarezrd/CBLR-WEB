@@ -7,6 +7,7 @@ import {
   changePersonnelAssignment,
   changePersonnelRank,
   changePersonnelStatus,
+  changePersonnelType,
 } from "@/modules/personnel/movements.service";
 
 function text(formData: FormData, key: string): string {
@@ -18,6 +19,23 @@ function movementError(memberId: string, section: string, error: unknown): never
   redirect(
     `/personal/${memberId}/movimientos?section=${encodeURIComponent(section)}&error=${encodeURIComponent(getActionErrorMessage(error))}`,
   );
+}
+
+export async function changePersonnelTypeAction(formData: FormData): Promise<void> {
+  const memberId = text(formData, "memberId");
+  if (!memberId) redirect("/personal");
+
+  try {
+    await changePersonnelType(memberId, {
+      personnelType: text(formData, "personnelType"),
+      effectiveDate: text(formData, "effectiveDate"),
+      reason: text(formData, "reason"),
+    });
+  } catch (error) {
+    movementError(memberId, "type", error);
+  }
+
+  redirect(`/personal/${memberId}?movement=type`);
 }
 
 export async function changePersonnelRankAction(formData: FormData): Promise<void> {

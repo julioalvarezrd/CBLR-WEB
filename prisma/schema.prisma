@@ -346,6 +346,7 @@ model PersonnelTypeHistory {
   personnelType PersonnelType
   effectiveFrom DateTime
   effectiveTo   DateTime?
+  reason        String?       @db.Text
   createdAt     DateTime      @default(now())
 
   member PersonnelMember @relation(fields: [memberId], references: [id], onDelete: Cascade)

@@ -9,6 +9,7 @@ type PersonnelTypeHistoryEntry = {
   personnelType: "VOLUNTEER" | "FIXED";
   effectiveFrom: Date;
   effectiveTo: Date | null;
+  reason: string | null;
 };
 
 type PersonnelRankHistoryEntry = {
@@ -134,7 +135,7 @@ function buildTimelineGroups({
       (entry) => entry.effectiveFrom,
       (entry) => entry.effectiveTo,
       (entry) => PERSONNEL_TYPE_LABELS[entry.personnelType],
-      () => null,
+      (entry) => entry.reason,
     ),
     ...buildEvents(
       "rank",
