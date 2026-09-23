@@ -79,7 +79,6 @@ export function NewUserForm({ roles, canAssignRoles }: NewUserFormProps) {
 
       setMember(body.member);
       setPersonnelCode(body.member.institutionalCode);
-      setEmail(body.member.email ?? "");
     } catch {
       setLookupError("No fue posible consultar el expediente de Personal.");
     } finally {
@@ -230,42 +229,35 @@ export function NewUserForm({ roles, canAssignRoles }: NewUserFormProps) {
         title="Datos de acceso"
         description={
           mode === "personnel"
-            ? "La identidad institucional se obtiene de Personal. Define el correo usado para iniciar sesión y la contraseña."
-            : "Completa los datos de la cuenta manual. La contraseña inicial debe tener al menos 12 caracteres."
+            ? "El código institucional será el nombre de usuario. Solo debes definir la contraseña y, si corresponde, los roles."
+            : "Define un nombre de usuario manual, los datos de la cuenta y la contraseña inicial."
         }
       >
         <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
           {mode === "manual" ? (
-            <div>
-              <label htmlFor="name" className={labelClassName}>Nombre</label>
-              <input
-                id="name"
-                name="name"
-                autoComplete="name"
-                required
-                className={inputClassName}
-              />
+            <>
+              <div>
+                <label htmlFor="username" className={labelClassName}>Nombre de usuario</label>
+                <input id="username" name="username" autoComplete="username" placeholder="Ej. operador.01" required className={inputClassName} />
+              </div>
+              <div>
+                <label htmlFor="name" className={labelClassName}>Nombre</label>
+                <input id="name" name="name" autoComplete="name" required className={inputClassName} />
+              </div>
+              <div>
+                <label htmlFor="email" className={labelClassName}>Correo electrónico</label>
+                <input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClassName} />
+                <p className="mt-1.5 text-xs leading-5 text-slate-500 dark:text-slate-400">Opcional. El acceso se realiza con el nombre de usuario.</p>
+              </div>
+            </>
+          ) : (
+            <div className="sm:col-span-2">
+              <label className={labelClassName}>Nombre de usuario</label>
+              <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-sm font-bold text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
+                {member?.institutionalCode || "Busca un miembro para obtener su código"}
+              </div>
             </div>
-          ) : null}
-
-          <div>
-            <label htmlFor="email" className={labelClassName}>Correo de acceso</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              className={inputClassName}
-            />
-            {mode === "personnel" ? (
-              <p className="mt-1.5 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                Se prellena con el correo de Personal cuando existe. Puedes cambiarlo si la cuenta debe iniciar sesión con otro correo institucional.
-              </p>
-            ) : null}
-          </div>
+          )}
 
           <div>
             <label htmlFor="password" className={labelClassName}>Contraseña inicial</label>

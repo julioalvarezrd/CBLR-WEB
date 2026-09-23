@@ -14,8 +14,9 @@ import type { AuthorizationContext } from "@/modules/auth/permissions/types";
 import type { PermissionKey } from "@/modules/auth/permissions/catalog";
 import { assertSecurityAdministratorRemains } from "@/modules/auth/security-guards";
 import {
-  normalizeEmail,
   normalizeName,
+  normalizeOptionalEmail,
+  normalizeUsername,
   validatePassword,
 } from "@/modules/auth/validations";
 
@@ -24,6 +25,10 @@ export type UserCreationMode = "manual" | "personnel";
 
 function normalizeInstitutionalCode(value: string): string {
   return value.trim().toUpperCase();
+}
+
+function personnelUsername(institutionalCode: string): string {
+  return normalizeUsername(institutionalCode);
 }
 
 function personnelDisplayName(firstNames: string, lastNames: string): string {
@@ -55,6 +60,7 @@ export async function listUsers(filters: { query?: string; status?: UserStatusFi
         ? {
             OR: [
               { name: { contains: query, mode: "insensitive" } },
+              { username: { contains: query, mode: "insensitive" } },
               { email: { contains: query, mode: "insensitive" } },
               {
                 personnelMember: {
@@ -84,6 +90,7 @@ export async function listUsers(filters: { query?: string; status?: UserStatusFi
     orderBy: { name: "asc" },
     select: {
       id: true,
+      username: true,
       name: true,
       email: true,
       isActive: true,
@@ -115,6 +122,7 @@ export async function getUser(userId: string) {
     where: { id: userId },
     select: {
       id: true,
+      username: true,
       name: true,
       email: true,
       isActive: true,
@@ -180,6 +188,7 @@ export async function listActiveRolesForAssignment() {
 
 export async function createUser(input: {
   mode: string;
+  username: string;
   name: string;
   email: string;
   password: string;
@@ -204,7 +213,9 @@ export async function createUser(input: {
   }
 
   let personnelMemberId: string | null = null;
+  let username: string;
   let name: string;
+  let email: string | null;
 
   if (mode === "personnel") {
     const institutionalCode = normalizeInstitutionalCode(input.personnelCode);
@@ -233,17 +244,30 @@ export async function createUser(input: {
     }
 
     personnelMemberId = member.id;
+    username = personnelUsername(member.institutionalCode);
     name = personnelDisplayName(member.firstNames, member.lastNames);
+    email = null;
   } else {
+    username = normalizeUsername(input.username);
     name = normalizeName(input.name);
+    email = normalizeOptionalEmail(input.email);
   }
 
-  const email = normalizeEmail(input.email);
-  const existing = await prisma.user.findUnique({
-    where: { email },
+  const existingUsername = await prisma.user.findUnique({
+    where: { username },
     select: { id: true },
   });
-  if (existing) throw new ConflictError("Ya existe un usuario con ese correo.");
+  if (existingUsername) {
+    throw new ConflictError("Ya existe un usuario con ese nombre de usuario.");
+  }
+
+  if (email) {
+    const existingEmail = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (existingEmail) throw new ConflictError("Ya existe un usuario con ese correo.");
+  }
 
   const passwordHash = await hashPassword(password);
 
@@ -262,6 +286,7 @@ export async function createUser(input: {
 
     const user = await tx.user.create({
       data: {
+        username,
         name,
         email,
         passwordHash,
@@ -269,6 +294,7 @@ export async function createUser(input: {
       },
       select: {
         id: true,
+        username: true,
         name: true,
         email: true,
         personnelMemberId: true,
@@ -291,6 +317,7 @@ export async function createUser(input: {
       entityType: "User",
       entityId: user.id,
       after: {
+        username: user.username,
         name: user.name,
         email: user.email,
         roleIds,

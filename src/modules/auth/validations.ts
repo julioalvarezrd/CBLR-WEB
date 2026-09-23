@@ -10,6 +10,29 @@ export function normalizeEmail(value: string): string {
   return email;
 }
 
+export function normalizeOptionalEmail(value: string): string | null {
+  const normalized = value.trim();
+  return normalized ? normalizeEmail(normalized) : null;
+}
+
+export function normalizeUsername(value: string): string {
+  const username = value.trim().toLowerCase();
+
+  if (username.length < 3 || username.length > 120) {
+    throw new ValidationError(
+      "El nombre de usuario debe tener entre 3 y 120 caracteres.",
+    );
+  }
+
+  if (!/^[a-z0-9._@-]+$/.test(username)) {
+    throw new ValidationError(
+      "El nombre de usuario solo puede contener letras, números, punto, guion, guion bajo o @.",
+    );
+  }
+
+  return username;
+}
+
 export function normalizeName(value: string, field = "nombre"): string {
   const normalized = value.trim().replace(/\s+/g, " ");
 
