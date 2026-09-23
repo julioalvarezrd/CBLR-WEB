@@ -15,6 +15,7 @@ import {
 } from "@/modules/personnel/constants";
 import { PersonnelInstitutionalTimeline } from "@/modules/personnel/components/personnel-institutional-timeline";
 import { PersonnelProfileHeader } from "@/modules/personnel/components/personnel-profile-header";
+import { formatHeightCmForDisplay } from "@/modules/personnel/height";
 import { getPersonnelMember } from "@/modules/personnel/personnel.service";
 
 const dateFormatter = new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" });
@@ -121,7 +122,7 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
           <DetailItem label="Estado civil">{member.maritalStatus ? MARITAL_STATUS_LABELS[member.maritalStatus] : "No registrado"}</DetailItem>
           <DetailItem label="Nacionalidad">{member.nationality}</DetailItem>
           <DetailItem label="Lugar de nacimiento">{member.birthplace || "No registrado"}</DetailItem>
-          <DetailItem label="Estatura">{member.heightCm ? String(member.heightCm) + " cm" : "No registrado"}</DetailItem>
+          <DetailItem label="Estatura">{formatHeightCmForDisplay(member.heightCm ? String(member.heightCm) : null)}</DetailItem>
         </dl>
       </ContentPanel>
 

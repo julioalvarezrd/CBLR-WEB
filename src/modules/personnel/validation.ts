@@ -1,5 +1,6 @@
 import { normalizePhone } from "@/lib/phone";
 import { ValidationError } from "@/modules/auth/errors";
+import { parseHeightInputToCm } from "@/modules/personnel/height";
 import {
   BLOOD_TYPE_OPTIONS,
   DEGREE_EDUCATION_LEVELS,
@@ -284,7 +285,7 @@ export function normalizePersonnelInput(input: CreatePersonnelInput): Normalized
     maritalStatus: optionalEnumValue(input.maritalStatus, maritalStatuses, "El estado civil"),
     nationality: input.nationality.trim() || "Dominicana",
     birthplace: optionalText(input.birthplace, "El lugar de nacimiento"),
-    heightCm: optionalNumber(input.heightCm, "La estatura", { min: 30, max: 250 }),
+    heightCm: parseHeightInputToCm(input.heightCm),
     phone: safePhone(input.phone, "Teléfono"),
     email: normalizeEmail(input.email),
     address: optionalText(input.address, "La dirección", 500),

@@ -325,8 +325,18 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
             <input id="birthplace" name="birthplace" placeholder="Ej. La Romana" className={inputClassName} />
           </div>
           <div>
-            <label htmlFor="heightCm" className={labelClassName}>Estatura (cm)</label>
-            <input id="heightCm" name="heightCm" type="number" min="30" max="250" step="0.1" className={inputClassName} />
+            <label htmlFor="heightCm" className={labelClassName}>Estatura (pies.pulgadas)</label>
+            <input
+              id="heightCm"
+              name="heightCm"
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]+([.,][0-9]{1,2})?"
+              placeholder="Ej. 5.6"
+              maxLength={5}
+              className={inputClassName}
+            />
+            <p className={hintClassName}>Ejemplo: 5.6 significa 5 pies y 6 pulgadas.</p>
           </div>
         </div>
       </ContentPanel>
