@@ -175,7 +175,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 border-t border-slate-200 dark:border-slate-800 md:grid-cols-3 xl:grid-cols-5">
+        <div
+          className={
+            "grid grid-cols-2 border-t border-slate-200 dark:border-slate-800 md:grid-cols-3 " +
+            (statCards.length === 5 ? "xl:grid-cols-5" : "xl:grid-cols-4")
+          }
+        >
           {statCards.map((stat) => (
             <div
               key={stat.key}

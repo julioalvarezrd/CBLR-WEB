@@ -247,6 +247,11 @@ export async function changePersonnelType(
     });
 
     if (currentStationHistory) {
+      validateEffectiveDate(
+        member.admissionDate,
+        currentStationHistory.effectiveFrom,
+        effectiveDate,
+      );
       await tx.personnelStationHistory.update({
         where: { id: currentStationHistory.id },
         data: { effectiveTo: previousDay(effectiveDate) },
