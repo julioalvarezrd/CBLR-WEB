@@ -6,6 +6,7 @@ import { getActionErrorMessage } from "@/modules/auth/action-errors";
 import {
   changePersonnelAssignment,
   changePersonnelRank,
+  changePersonnelStation,
   changePersonnelStatus,
   changePersonnelType,
 } from "@/modules/personnel/movements.service";
@@ -28,6 +29,7 @@ export async function changePersonnelTypeAction(formData: FormData): Promise<voi
   try {
     await changePersonnelType(memberId, {
       personnelType: text(formData, "personnelType"),
+      stationId: text(formData, "stationId"),
       effectiveDate: text(formData, "effectiveDate"),
       reason: text(formData, "reason"),
     });
@@ -71,6 +73,23 @@ export async function changePersonnelAssignmentAction(formData: FormData): Promi
   }
 
   redirect(`/personal/${memberId}?movement=assignment`);
+}
+
+export async function changePersonnelStationAction(formData: FormData): Promise<void> {
+  const memberId = text(formData, "memberId");
+  if (!memberId) redirect("/personal");
+
+  try {
+    await changePersonnelStation(memberId, {
+      stationId: text(formData, "stationId"),
+      effectiveDate: text(formData, "effectiveDate"),
+      reason: text(formData, "reason"),
+    });
+  } catch (error) {
+    movementError(memberId, "station", error);
+  }
+
+  redirect(`/personal/${memberId}?movement=station`);
 }
 
 export async function changePersonnelStatusAction(formData: FormData): Promise<void> {

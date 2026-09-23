@@ -6,6 +6,7 @@ import { ContentPanel } from "@/components/ui/content-panel";
 import {
   changePersonnelAssignmentAction,
   changePersonnelRankAction,
+  changePersonnelStationAction,
   changePersonnelStatusAction,
   changePersonnelTypeAction,
 } from "@/modules/personnel/movements.actions";
@@ -28,6 +29,13 @@ type PositionOption = {
   departmentId: string | null;
 };
 
+type StationOption = {
+  id: string;
+  code: string;
+  name: string;
+  type: "HEADQUARTERS" | "SUBSTATION";
+};
+
 type PersonnelMovementsProps = {
   member: {
     id: string;
@@ -36,17 +44,21 @@ type PersonnelMovementsProps = {
     rankId: string;
     departmentId: string | null;
     positionId: string | null;
+    stationId: string | null;
     rankName: string;
     departmentName: string | null;
     positionName: string | null;
+    stationName: string | null;
     typeEffectiveFrom: string;
     rankEffectiveFrom: string;
     assignmentEffectiveFrom: string;
+    stationEffectiveFrom: string | null;
     statusEffectiveFrom: string;
   };
   ranks: RankOption[];
   departments: DepartmentOption[];
   positions: PositionOption[];
+  stations: StationOption[];
 };
 
 const inputClassName =
@@ -61,13 +73,15 @@ function CurrentValue({
 }: {
   label: string;
   value: string;
-  since: string;
+  since: string | null;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950/50">
       <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
       <p className="mt-1 text-sm font-bold text-slate-900 dark:text-slate-100">{value}</p>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Vigente desde {since}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        {since ? `Vigente desde ${since}` : "Sin historial de cuartel vigente"}
+      </p>
     </div>
   );
 }
@@ -77,6 +91,7 @@ export function PersonnelMovements({
   ranks,
   departments,
   positions,
+  stations,
 }: PersonnelMovementsProps) {
   const [departmentId, setDepartmentId] = useState(member.departmentId ?? "");
   const [positionId, setPositionId] = useState(member.positionId ?? "");
@@ -113,7 +128,11 @@ export function PersonnelMovements({
             <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
               {targetTypeLabel}
             </div>
-            <p className={hintClassName}>Este movimiento no modifica automáticamente el rango del miembro.</p>
+            <p className={hintClassName}>
+              {targetType === "FIXED"
+                ? "Al pasar a Fijo debes asignar el cuartel inicial."
+                : "Al pasar a Voluntario se cierra el cuartel vigente sin borrar su historial."}
+            </p>
           </div>
 
           <div>
@@ -121,6 +140,20 @@ export function PersonnelMovements({
             <input id="typeEffectiveDate" name="effectiveDate" type="date" required className={inputClassName} />
             <p className={hintClassName}>Debe ser posterior al inicio del tipo de personal vigente.</p>
           </div>
+
+          {targetType === "FIXED" ? (
+            <div>
+              <label htmlFor="typeStationId" className={labelClassName}>Cuartel inicial</label>
+              <select id="typeStationId" name="stationId" required defaultValue="" className={inputClassName}>
+                <option value="" disabled>Selecciona un cuartel</option>
+                {stations.map((station) => (
+                  <option key={station.id} value={station.id}>
+                    {station.code} — {station.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : null}
 
           <div className="lg:col-span-3">
             <label htmlFor="typeReason" className={labelClassName}>Motivo</label>
@@ -257,6 +290,54 @@ export function PersonnelMovements({
           </div>
         </form>
       </ContentPanel>
+
+      {member.personnelType === "FIXED" ? (
+        <ContentPanel
+          title="Cambio de cuartel"
+          description="La asignación de cuartel aplica únicamente al personal fijo y conserva todo su historial."
+        >
+          <form action={changePersonnelStationAction} className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
+            <input type="hidden" name="memberId" value={member.id} />
+
+            <CurrentValue
+              label="Cuartel actual"
+              value={member.stationName || "Sin cuartel asignado"}
+              since={member.stationEffectiveFrom}
+            />
+
+            <div>
+              <label htmlFor="stationId" className={labelClassName}>Nuevo cuartel</label>
+              <select id="stationId" name="stationId" required defaultValue="" className={inputClassName}>
+                <option value="" disabled>Selecciona el nuevo cuartel</option>
+                {stations
+                  .filter((station) => station.id !== member.stationId)
+                  .map((station) => (
+                    <option key={station.id} value={station.id}>
+                      {station.code} — {station.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="stationEffectiveDate" className={labelClassName}>Fecha efectiva</label>
+              <input id="stationEffectiveDate" name="effectiveDate" type="date" required className={inputClassName} />
+              <p className={hintClassName}>Si es la primera asignación de un registro legado, se abrirá el historial desde esta fecha.</p>
+            </div>
+
+            <div className="lg:col-span-3">
+              <label htmlFor="stationReason" className={labelClassName}>Motivo</label>
+              <textarea id="stationReason" name="reason" rows={3} maxLength={1000} required placeholder="Ej. Traslado operativo al Cuartel General..." className={inputClassName} />
+            </div>
+
+            <div className="lg:col-span-3 flex justify-end">
+              <button type="submit" className="rounded-xl bg-red-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-red-800">
+                Registrar cambio de cuartel
+              </button>
+            </div>
+          </form>
+        </ContentPanel>
+      ) : null}
 
       <ContentPanel
         title="Cambio de estado"
