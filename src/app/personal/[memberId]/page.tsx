@@ -3,7 +3,6 @@ import type { ReactNode } from "react";
 
 import { BackLink } from "@/components/ui/back-link";
 import { ContentPanel } from "@/components/ui/content-panel";
-import { ModuleHeader } from "@/components/ui/module-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { requirePagePermission } from "@/modules/auth/permissions/page-authorization";
 import {
@@ -14,6 +13,7 @@ import {
   PERSONNEL_TYPE_LABELS,
   SEX_LABELS,
 } from "@/modules/personnel/constants";
+import { PersonnelProfileHeader } from "@/modules/personnel/components/personnel-profile-header";
 import { getPersonnelMember } from "@/modules/personnel/personnel.service";
 
 const dateFormatter = new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" });
@@ -46,29 +46,39 @@ function ValuesList({ values }: { values: string[] }) {
 
 type PersonnelDetailPageProps = {
   params: Promise<{ memberId: string }>;
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; updated?: string }>;
 };
 
 export default async function PersonnelDetailPage({ params, searchParams }: PersonnelDetailPageProps) {
-  await requirePagePermission("personal.view");
+  const context = await requirePagePermission("personal.view");
   const [{ memberId }, query] = await Promise.all([params, searchParams]);
   const member = await getPersonnelMember(memberId);
+  const canEdit = context.permissions.has("personal.edit");
 
   return (
     <div className="space-y-6">
-      <BackLink href="/personal">Volver a personal</BackLink>
+      <BackLink href="/personal">Volver a Gestión de personal</BackLink>
 
-      <ModuleHeader
-        eyebrow="Ficha de personal"
-        title={member.firstNames + " " + member.lastNames}
-        description={"Código institucional " + member.institutionalCode}
-        stats={[
-          { label: "Tipo", value: PERSONNEL_TYPE_LABELS[member.personnelType] },
-          { label: "Rango", value: member.rank.name },
-          { label: "Departamento", value: member.department?.name || "Sin asignar" },
-          { label: "Cargo", value: member.position?.name || "Sin asignar" },
-        ]}
+      <PersonnelProfileHeader
+        memberId={member.id}
+        institutionalCode={member.institutionalCode}
+        status={member.status}
+        firstNames={member.firstNames}
+        lastNames={member.lastNames}
+        personnelType={PERSONNEL_TYPE_LABELS[member.personnelType]}
+        rank={member.rank.name}
+        department={member.department?.name ?? null}
+        position={member.position?.name ?? null}
+        hasPhoto={Boolean(member.photoMimeType)}
+        photoVersion={member.updatedAt.getTime()}
+        canEdit={canEdit}
       />
+
+      {query.updated === "1" ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+          Ficha del miembro actualizada correctamente.
+        </div>
+      ) : null}
 
       {query.saved === "1" ? (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">

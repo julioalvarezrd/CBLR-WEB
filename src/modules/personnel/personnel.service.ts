@@ -312,6 +312,177 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
   }
 }
 
+export async function getPersonnelMemberForEdit(memberId: string) {
+  await requirePermission("personal.edit");
+  const member = await prisma.personnelMember.findUnique({
+    where: { id: memberId },
+    omit: { photoData: true },
+    include: {
+      rank: { select: { id: true, name: true } },
+      department: { select: { id: true, name: true } },
+      position: { select: { id: true, name: true } },
+      recommender: {
+        select: {
+          id: true,
+          institutionalCode: true,
+          firstNames: true,
+          lastNames: true,
+          status: true,
+          rank: { select: { name: true } },
+        },
+      },
+    },
+  });
+
+  if (!member) throw new ValidationError("El miembro indicado no existe.");
+  return member;
+}
+
+export async function updatePersonnelMember(
+  memberId: string,
+  rawInput: CreatePersonnelInput,
+  rawPhoto?: File,
+  removePhoto = false,
+) {
+  const actor = await requirePermission("personal.edit");
+  const input = normalizePersonnelInput(rawInput);
+  const photo = await normalizePersonnelPhoto(rawPhoto);
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const current = await tx.personnelMember.findUnique({
+        where: { id: memberId },
+        select: {
+          id: true,
+          institutionalCode: true,
+          firstNames: true,
+          lastNames: true,
+          documentType: true,
+          documentNumber: true,
+          phone: true,
+          email: true,
+          photoMimeType: true,
+        },
+      });
+      if (!current) throw new ValidationError("El miembro indicado no existe.");
+
+      if (input.documentNumberNormalized) {
+        const duplicate = await tx.personnelMember.findFirst({
+          where: {
+            documentNumberNormalized: input.documentNumberNormalized,
+            NOT: { id: memberId },
+          },
+          select: { institutionalCode: true },
+        });
+        if (duplicate) {
+          throw new ConflictError(
+            `Ya existe un miembro con ese documento (${duplicate.institutionalCode}).`,
+          );
+        }
+      }
+
+      let recommendedByMemberId: string | null = null;
+      if (input.wasRecommended && input.recommenderCode) {
+        const recommender = await tx.personnelMember.findUnique({
+          where: { institutionalCode: normalizeInstitutionalCode(input.recommenderCode) },
+          select: { id: true },
+        });
+        if (!recommender) {
+          throw new ValidationError("No existe un miembro con el código institucional indicado.");
+        }
+        if (recommender.id === memberId) {
+          throw new ValidationError("Un miembro no puede recomendarse a sí mismo.");
+        }
+        recommendedByMemberId = recommender.id;
+      }
+
+      const photoUpdate = photo
+        ? photo
+        : removePhoto
+          ? { photoData: null, photoMimeType: null }
+          : {};
+
+      const member = await tx.personnelMember.update({
+        where: { id: memberId },
+        data: {
+          firstNames: input.firstNames,
+          lastNames: input.lastNames,
+          documentType: input.documentType,
+          documentNumber: input.documentNumber,
+          documentNumberNormalized: input.documentNumberNormalized,
+          birthDate: input.birthDate,
+          sex: input.sex,
+          maritalStatus: input.maritalStatus,
+          nationality: input.nationality,
+          birthplace: input.birthplace,
+          heightCm: input.heightCm,
+          phone: input.phone,
+          email: input.email,
+          address: input.address,
+          province: input.province,
+          municipality: input.municipality,
+          neighborhood: input.neighborhood,
+          worksCurrently: input.worksCurrently,
+          workplace: input.workplace,
+          occupation: input.occupation,
+          workAddress: input.workAddress,
+          workPhone: input.workPhone,
+          hasDriverLicense: input.hasDriverLicense,
+          driverLicenseCategory: input.driverLicenseCategory,
+          driverLicenseExpiresAt: input.driverLicenseExpiresAt,
+          bloodType: input.bloodType,
+          healthCondition: input.healthCondition,
+          hasAllergies: input.hasAllergies,
+          allergies: input.allergies,
+          emergencyContactName: input.emergencyContactName,
+          emergencyRelationship: input.emergencyRelationship,
+          emergencyPhone: input.emergencyPhone,
+          educationLevel: input.educationLevel,
+          educationalInstitution: input.educationalInstitution,
+          degreeObtained: input.degreeObtained,
+          languages: input.languages,
+          technicalCourses: input.technicalCourses,
+          recommendedByMemberId,
+          applicationDate: input.applicationDate,
+          observations: input.observations,
+          ...photoUpdate,
+        },
+        select: {
+          id: true,
+          institutionalCode: true,
+          firstNames: true,
+          lastNames: true,
+          documentType: true,
+          documentNumber: true,
+          phone: true,
+          email: true,
+          photoMimeType: true,
+        },
+      });
+
+      await writeAudit(tx, {
+        actorUserId: actor.user.id,
+        action: "personnel.updated",
+        entityType: "PersonnelMember",
+        entityId: member.id,
+        before: current,
+        after: member,
+        metadata: {
+          photoUpdated: Boolean(photo),
+          photoRemoved: !photo && removePhoto,
+        },
+      });
+
+      return member;
+    });
+  } catch (error) {
+    if (isPrismaUniqueConstraintError(error)) {
+      throw new ConflictError("No se pudo actualizar el miembro porque el documento ya existe.");
+    }
+    throw error;
+  }
+}
+
 export async function listPersonnel(
   filters: {
     query?: string;
@@ -372,6 +543,7 @@ export async function getPersonnelMember(memberId: string) {
   await requirePermission("personal.view");
   const member = await prisma.personnelMember.findUnique({
     where: { id: memberId },
+    omit: { photoData: true },
     include: {
       rank: { select: { id: true, name: true } },
       department: { select: { id: true, name: true } },
