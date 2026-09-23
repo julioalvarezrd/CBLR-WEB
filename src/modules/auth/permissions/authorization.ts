@@ -29,6 +29,7 @@ export async function getAuthorizationContext(): Promise<AuthorizationContext | 
       isActive: true,
       personnelMember: {
         select: {
+          institutionalCode: true,
           firstNames: true,
           lastNames: true,
         },
@@ -73,7 +74,7 @@ export async function getAuthorizationContext(): Promise<AuthorizationContext | 
   return {
     user: {
       id: user.id,
-      username: user.username,
+      username: user.personnelMember?.institutionalCode ?? user.username,
       email: user.email,
       name: user.personnelMember
         ? `${user.personnelMember.firstNames} ${user.personnelMember.lastNames}`

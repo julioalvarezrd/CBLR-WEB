@@ -109,7 +109,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                         {displayName}
                       </Link>
                       <p className="mt-0.5 font-mono text-xs font-semibold text-slate-400 dark:text-slate-500">
-                        {user.username}
+                        {user.personnelMember?.institutionalCode ?? user.username}
                       </p>
                       {user.personnelMember ? (
                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

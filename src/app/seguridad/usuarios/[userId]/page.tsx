@@ -59,7 +59,7 @@ export default async function UserPage({
       <ModuleHeader
         eyebrow="Administración"
         title={displayName}
-        description={user.username}
+        description={user.personnelMember?.institutionalCode ?? user.username}
         action={
           <StatusBadge tone={user.isActive ? "success" : "neutral"}>
             {user.isActive ? "Activo" : "Inactivo"}
