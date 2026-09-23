@@ -32,6 +32,12 @@ function institutionalPrefix(value: string | null | undefined): string {
   return normalized || "CBLR";
 }
 
+function institutionalYearCode(year: number): string {
+  return year >= 2000
+    ? String(year % 100).padStart(2, "0")
+    : String(year);
+}
+
 function normalizeInstitutionalCode(value: string): string {
   return value.trim().toUpperCase();
 }
@@ -187,7 +193,7 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
           select: { institutionalPrefix: true },
         }),
       ]);
-      const yearCode = String(codeYear % 100).padStart(2, "0");
+      const yearCode = institutionalYearCode(codeYear);
       const institutionalCode = `${yearCode}-${institutionalPrefix(settings?.institutionalPrefix)}-${String(sequence.lastValue).padStart(3, "0")}`;
 
       const member = await tx.personnelMember.create({
