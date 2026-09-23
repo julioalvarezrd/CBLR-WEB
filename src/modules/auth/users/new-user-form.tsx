@@ -262,7 +262,7 @@ export function NewUserForm({ roles, canAssignRoles }: NewUserFormProps) {
             />
             {mode === "personnel" ? (
               <p className="mt-1.5 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                Se prellena con el correo de Personal cuando existe, pero puede ser diferente si la cuenta usa un correo institucional.
+                Se prellena con el correo de Personal cuando existe. Puedes cambiarlo si la cuenta debe iniciar sesión con otro correo institucional.
               </p>
             ) : null}
           </div>
