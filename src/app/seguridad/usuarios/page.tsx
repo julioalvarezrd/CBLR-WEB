@@ -58,9 +58,25 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
               {users.map((user) => {
                 const href = "/seguridad/usuarios/" + user.id;
+                const displayName = user.personnelMember
+                  ? user.personnelMember.firstNames + " " + user.personnelMember.lastNames
+                  : user.name;
+                const identityDetail = user.personnelMember
+                  ? user.personnelMember.institutionalCode + " · " + user.email
+                  : "Manual · " + user.email;
                 return (
                   <NavigableTableRow key={user.id} href={href}>
-                    <td className="px-6 py-3.5"><Link href={href} className="font-semibold text-slate-900 hover:text-red-700 dark:text-slate-100 dark:hover:text-red-400">{user.name}</Link><p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{user.email}</p></td>
+                    <td className="px-6 py-3.5">
+                      <Link href={href} className="font-semibold text-slate-900 hover:text-red-700 dark:text-slate-100 dark:hover:text-red-400">
+                        {displayName}
+                      </Link>
+                      <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{identityDetail}</p>
+                      {user.personnelMember ? (
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          {user.personnelMember.rank.name} · {user.personnelMember.department?.name || "Sin departamento"}
+                        </p>
+                      ) : null}
+                    </td>
                     <td className="max-w-md px-6 py-3.5 text-slate-600 dark:text-slate-300">{user.roles.length > 0 ? user.roles.map(({ role }) => role.isActive ? role.name : role.name + " (inactivo)").join(", ") : "Sin roles"}</td>
                     <td className="px-6 py-3.5 text-slate-600 dark:text-slate-300">{user.lastLoginAt ? dateFormatter.format(user.lastLoginAt) : "Nunca"}</td>
                     <td className="px-6 py-3.5"><StatusBadge tone={user.isActive ? "success" : "neutral"}>{user.isActive ? "Activo" : "Inactivo"}</StatusBadge></td>

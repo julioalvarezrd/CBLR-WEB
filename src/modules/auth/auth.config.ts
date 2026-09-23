@@ -48,6 +48,12 @@ export const authConfig = {
             name: true,
             passwordHash: true,
             isActive: true,
+            personnelMember: {
+              select: {
+                firstNames: true,
+                lastNames: true,
+              },
+            },
           },
         });
 
@@ -79,7 +85,9 @@ export const authConfig = {
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: user.personnelMember
+            ? `${user.personnelMember.firstNames} ${user.personnelMember.lastNames}`
+            : user.name,
         };
       },
     }),
