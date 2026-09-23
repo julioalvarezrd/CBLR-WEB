@@ -64,8 +64,9 @@ model User {
   id             String   @id @default(cuid())
   email          String   @unique
   name           String
-  passwordHash   String
-  isActive       Boolean  @default(true)
+  passwordHash      String
+  personnelMemberId String?  @unique
+  isActive          Boolean  @default(true)
   lastLoginAt    DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -75,6 +76,9 @@ model User {
   permissionAssignments RolePermission[] @relation("RolePermissionAssignedBy")
   auditLogs             AuditLog[]       @relation("AuditActor")
   personnelCreated      PersonnelMember[] @relation("PersonnelMemberCreatedBy")
+  personnelMember       PersonnelMember?   @relation("UserPersonnelMember", fields: [personnelMemberId], references: [id], onDelete: SetNull)
+
+  @@index([personnelMemberId])
 }
 
 model Role {
@@ -329,6 +333,7 @@ model PersonnelMember {
   rankHistory     PersonnelRankHistory[]
   assignmentHistory PersonnelAssignmentHistory[]
   statusHistory     PersonnelStatusHistory[]
+  user              User? @relation("UserPersonnelMember")
 
   @@unique([codeYear, codeSequence])
   @@index([status, lastNames, firstNames])
