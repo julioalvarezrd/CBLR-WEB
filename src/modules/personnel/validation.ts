@@ -213,13 +213,20 @@ function normalizeDocument(
   }
   if (!display) return { display: null, normalized: null };
 
-  const normalized =
-    type === "CEDULA"
-      ? display.replace(/\D/g, "")
-      : display.replace(/\s+/g, "").toUpperCase();
+  if (type === "CEDULA") {
+    const digits = display.replace(/\D/g, "");
+    if (digits.length !== 11) {
+      throw new ValidationError("La cédula debe contener 11 dígitos.");
+    }
+    return {
+      display: `${digits.slice(0, 3)}-${digits.slice(3, 10)}-${digits.slice(10)}`,
+      normalized: `CEDULA:${digits}`,
+    };
+  }
 
+  const normalized = display.replace(/\s+/g, "").toUpperCase();
   if (!normalized) throw new ValidationError("El número de documento no es válido.");
-  return { display, normalized: `${type}:${normalized}` };
+  return { display, normalized: `PASSPORT:${normalized}` };
 }
 
 function normalizeList(values: string[], label: string): string[] {

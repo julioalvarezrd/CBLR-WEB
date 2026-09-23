@@ -313,6 +313,8 @@ model PersonnelMember {
   recommendedByMemberId    String?
   applicationDate          DateTime?
   observations             String?         @db.Text
+  photoData                Bytes?
+  photoMimeType            String?
   createdByUserId          String
   createdAt                DateTime        @default(now())
   updatedAt                DateTime        @updatedAt

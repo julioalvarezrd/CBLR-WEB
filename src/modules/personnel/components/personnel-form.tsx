@@ -5,10 +5,10 @@ import { useMemo, useState } from "react";
 
 import { ContentPanel } from "@/components/ui/content-panel";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { DocumentFields } from "@/modules/personnel/components/document-fields";
 import {
   BLOOD_TYPE_OPTIONS,
   DEGREE_EDUCATION_LEVELS,
-  DOCUMENT_TYPE_OPTIONS,
   EDUCATION_LEVEL_OPTIONS,
   MARITAL_STATUS_OPTIONS,
   PERSONNEL_TYPE_OPTIONS,
@@ -281,24 +281,23 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
       <ContentPanel title="Datos personales">
         <div className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-3 sm:p-6">
           <div>
+            <label htmlFor="photo" className={labelClassName}>Foto</label>
+            <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp" className={inputClassName} />
+            <p className={hintClassName}>Opcional. JPG, PNG o WebP, máximo 5 MB.</p>
+          </div>
+          <div>
             <label htmlFor="firstNames" className={labelClassName}>Nombres</label>
-            <input id="firstNames" name="firstNames" autoComplete="given-name" required className={inputClassName} />
+            <input id="firstNames" name="firstNames" autoComplete="given-name" placeholder="Ej. Juan Carlos" required className={inputClassName} />
           </div>
           <div>
             <label htmlFor="lastNames" className={labelClassName}>Apellidos</label>
-            <input id="lastNames" name="lastNames" autoComplete="family-name" required className={inputClassName} />
+            <input id="lastNames" name="lastNames" autoComplete="family-name" placeholder="Ej. Pérez Rodríguez" required className={inputClassName} />
           </div>
-          <div>
-            <label htmlFor="documentType" className={labelClassName}>Tipo de documento</label>
-            <select id="documentType" name="documentType" required className={inputClassName} defaultValue="CEDULA">
-              {DOCUMENT_TYPE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="documentNumber" className={labelClassName}>Número de documento</label>
-            <input id="documentNumber" name="documentNumber" className={inputClassName} />
-            <p className={hintClassName}>La cédula es obligatoria cuando se utiliza ese tipo de documento.</p>
-          </div>
+          <DocumentFields
+            inputClassName={inputClassName}
+            labelClassName={labelClassName}
+            hintClassName={hintClassName}
+          />
           <div>
             <label htmlFor="birthDate" className={labelClassName}>Fecha de nacimiento</label>
             <input id="birthDate" name="birthDate" type="date" className={inputClassName} />
@@ -323,7 +322,7 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
           </div>
           <div>
             <label htmlFor="birthplace" className={labelClassName}>Lugar de nacimiento</label>
-            <input id="birthplace" name="birthplace" className={inputClassName} />
+            <input id="birthplace" name="birthplace" placeholder="Ej. La Romana" className={inputClassName} />
           </div>
           <div>
             <label htmlFor="heightCm" className={labelClassName}>Estatura (cm)</label>
@@ -336,15 +335,15 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
         <div className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-3 sm:p-6">
           <div>
             <label htmlFor="phone" className={labelClassName}>Teléfono</label>
-            <PhoneInput id="phone" name="phone" className={inputClassName} />
+            <PhoneInput id="phone" name="phone" placeholder="809-000-0000" className={inputClassName} />
           </div>
           <div>
             <label htmlFor="email" className={labelClassName}>Correo electrónico</label>
-            <input id="email" name="email" type="email" autoComplete="email" className={inputClassName} />
+            <input id="email" name="email" type="email" autoComplete="email" placeholder="nombre@ejemplo.com" className={inputClassName} />
           </div>
           <div className="sm:col-span-2 lg:col-span-3">
             <label htmlFor="address" className={labelClassName}>Dirección</label>
-            <input id="address" name="address" autoComplete="street-address" className={inputClassName} />
+            <input id="address" name="address" autoComplete="street-address" placeholder="Calle, número y referencia" className={inputClassName} />
           </div>
           <div>
             <label htmlFor="province" className={labelClassName}>Provincia</label>
@@ -356,7 +355,7 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
           </div>
           <div>
             <label htmlFor="neighborhood" className={labelClassName}>Barrio / Sector</label>
-            <input id="neighborhood" name="neighborhood" className={inputClassName} />
+            <input id="neighborhood" name="neighborhood" placeholder="Ej. Villa Verde" className={inputClassName} />
           </div>
         </div>
       </ContentPanel>
@@ -368,11 +367,11 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label htmlFor="workplace" className={labelClassName}>Empresa o lugar de trabajo</label>
-                <input id="workplace" name="workplace" className={inputClassName} />
+                <input id="workplace" name="workplace" placeholder="Nombre de la empresa o institución" className={inputClassName} />
               </div>
               <div>
                 <label htmlFor="occupation" className={labelClassName}>Cargo u ocupación</label>
-                <input id="occupation" name="occupation" className={inputClassName} />
+                <input id="occupation" name="occupation" placeholder="Ej. Técnico electricista" className={inputClassName} />
               </div>
               <div>
                 <label htmlFor="workAddress" className={labelClassName}>Dirección laboral</label>
@@ -380,7 +379,7 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
               </div>
               <div>
                 <label htmlFor="workPhone" className={labelClassName}>Teléfono laboral</label>
-                <PhoneInput id="workPhone" name="workPhone" className={inputClassName} />
+                <PhoneInput id="workPhone" name="workPhone" placeholder="809-000-0000" className={inputClassName} />
               </div>
             </div>
           ) : null}
@@ -428,15 +427,15 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
           ) : null}
           <div>
             <label htmlFor="emergencyContactName" className={labelClassName}>Nombre del contacto de emergencia</label>
-            <input id="emergencyContactName" name="emergencyContactName" className={inputClassName} />
+            <input id="emergencyContactName" name="emergencyContactName" placeholder="Nombre completo" className={inputClassName} />
           </div>
           <div>
             <label htmlFor="emergencyRelationship" className={labelClassName}>Parentesco / relación</label>
-            <input id="emergencyRelationship" name="emergencyRelationship" className={inputClassName} />
+            <input id="emergencyRelationship" name="emergencyRelationship" placeholder="Ej. Madre, hermano, cónyuge" className={inputClassName} />
           </div>
           <div>
             <label htmlFor="emergencyPhone" className={labelClassName}>Teléfono del contacto</label>
-            <PhoneInput id="emergencyPhone" name="emergencyPhone" className={inputClassName} />
+            <PhoneInput id="emergencyPhone" name="emergencyPhone" placeholder="809-000-0000" className={inputClassName} />
           </div>
         </div>
       </ContentPanel>
@@ -458,12 +457,12 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
           </div>
           <div>
             <label htmlFor="educationalInstitution" className={labelClassName}>Centro educativo</label>
-            <input id="educationalInstitution" name="educationalInstitution" className={inputClassName} />
+            <input id="educationalInstitution" name="educationalInstitution" placeholder="Nombre del centro educativo" className={inputClassName} />
           </div>
           {educationLevel && DEGREE_EDUCATION_LEVELS.has(educationLevel) ? (
             <div className="sm:col-span-2">
               <label htmlFor="degreeObtained" className={labelClassName}>Título obtenido</label>
-              <input id="degreeObtained" name="degreeObtained" className={inputClassName} />
+              <input id="degreeObtained" name="degreeObtained" placeholder="Ej. Licenciatura en Administración" className={inputClassName} />
             </div>
           ) : null}
           <MultiValueField name="languages" label="Idiomas" placeholder="Ej. Inglés" />

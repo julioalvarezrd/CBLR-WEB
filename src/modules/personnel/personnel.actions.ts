@@ -14,6 +14,11 @@ function getBoolean(formData: FormData, key: string): boolean {
   return getText(formData, key) === "true" || getText(formData, key) === "on";
 }
 
+function getFile(formData: FormData, key: string): File | undefined {
+  const value = formData.get(key);
+  return value instanceof File && value.size > 0 ? value : undefined;
+}
+
 function getTextList(formData: FormData, key: string): string[] {
   return formData
     .getAll(key)
@@ -71,7 +76,7 @@ export async function createPersonnelMemberAction(formData: FormData): Promise<v
       recommenderCode: getText(formData, "recommenderCode"),
       applicationDate: getText(formData, "applicationDate"),
       observations: getText(formData, "observations"),
-    });
+    }, getFile(formData, "photo"));
 
     memberId = member.id;
   } catch (error) {

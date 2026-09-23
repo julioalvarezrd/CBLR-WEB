@@ -10,6 +10,28 @@ import {
 export type PersonnelStatusFilter = "active" | "inactive" | "all";
 export type PersonnelTypeFilter = "all" | "volunteer" | "fixed";
 
+const MAX_PERSONNEL_PHOTO_BYTES = 5 * 1024 * 1024;
+const ALLOWED_PERSONNEL_PHOTO_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+
+async function normalizePersonnelPhoto(photo: File | undefined) {
+  if (!photo || photo.size === 0) return null;
+  if (!ALLOWED_PERSONNEL_PHOTO_TYPES.has(photo.type)) {
+    throw new ValidationError("La foto debe ser PNG, JPG o WebP.");
+  }
+  if (photo.size > MAX_PERSONNEL_PHOTO_BYTES) {
+    throw new ValidationError("La foto no puede exceder 5 MB.");
+  }
+  return {
+    photoData: new Uint8Array(await photo.arrayBuffer()),
+    photoMimeType: photo.type,
+  };
+}
+
+function institutionalPrefix(value: string | null | undefined): string {
+  const normalized = value?.replace(/[^A-Za-z0-9]/g, "").toUpperCase() ?? "";
+  return normalized || "CBLR";
+}
+
 function normalizeInstitutionalCode(value: string): string {
   return value.trim().toUpperCase();
 }
@@ -65,9 +87,10 @@ export async function getRecommenderByCode(code: string) {
   });
 }
 
-export async function createPersonnelMember(rawInput: CreatePersonnelInput) {
+export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawPhoto?: File) {
   const actor = await requirePermission("personal.create");
   const input = normalizePersonnelInput(rawInput);
+  const photo = await normalizePersonnelPhoto(rawPhoto);
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -152,13 +175,20 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput) {
       }
 
       const codeYear = input.admissionDate.getUTCFullYear();
-      const sequence = await tx.personnelCodeSequence.upsert({
-        where: { year: codeYear },
-        create: { year: codeYear, lastValue: 1 },
-        update: { lastValue: { increment: 1 } },
-        select: { lastValue: true },
-      });
-      const institutionalCode = `${codeYear}-${String(sequence.lastValue).padStart(4, "0")}`;
+      const [sequence, settings] = await Promise.all([
+        tx.personnelCodeSequence.upsert({
+          where: { year: codeYear },
+          create: { year: codeYear, lastValue: 1 },
+          update: { lastValue: { increment: 1 } },
+          select: { lastValue: true },
+        }),
+        tx.institutionalSettings.findUnique({
+          where: { id: 1 },
+          select: { institutionalPrefix: true },
+        }),
+      ]);
+      const yearCode = String(codeYear % 100).padStart(2, "0");
+      const institutionalCode = `${yearCode}-${institutionalPrefix(settings?.institutionalPrefix)}-${String(sequence.lastValue).padStart(3, "0")}`;
 
       const member = await tx.personnelMember.create({
         data: {
@@ -212,6 +242,7 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput) {
           recommendedByMemberId,
           applicationDate: input.applicationDate,
           observations: input.observations,
+          ...(photo ?? {}),
           createdByUserId: actor.user.id,
         },
         select: {
