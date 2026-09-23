@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { ContentPanel } from "@/components/ui/content-panel";
@@ -533,12 +534,12 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
       </ContentPanel>
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <a
+        <Link
           href="/personal"
           className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
         >
           Cancelar
-        </a>
+        </Link>
         <button
           type="submit"
           className="inline-flex items-center justify-center rounded-xl bg-red-700 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800"
