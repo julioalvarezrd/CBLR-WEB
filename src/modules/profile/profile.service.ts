@@ -48,6 +48,8 @@ export async function getMyProfile() {
         select: {
           id: true,
           institutionalCode: true,
+          firstNames: true,
+          lastNames: true,
           personnelType: true,
           status: true,
           historicalHours: true,
@@ -148,7 +150,7 @@ export async function getMyProfile() {
       id: user.id,
       username: member.institutionalCode,
       email: user.email,
-      name: user.name,
+      name: `${member.firstNames} ${member.lastNames}`,
       isActive: user.isActive,
       lastLoginAt: user.lastLoginAt,
       roles,
