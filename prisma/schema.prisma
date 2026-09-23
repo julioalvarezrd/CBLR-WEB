@@ -328,6 +328,7 @@ model PersonnelMember {
   typeHistory     PersonnelTypeHistory[]
   rankHistory     PersonnelRankHistory[]
   assignmentHistory PersonnelAssignmentHistory[]
+  statusHistory     PersonnelStatusHistory[]
 
   @@unique([codeYear, codeSequence])
   @@index([status, lastNames, firstNames])
@@ -358,6 +359,7 @@ model PersonnelRankHistory {
   rankId        String
   effectiveFrom DateTime
   effectiveTo   DateTime?
+  reason        String?  @db.Text
   createdAt     DateTime @default(now())
 
   member PersonnelMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -374,6 +376,7 @@ model PersonnelAssignmentHistory {
   positionId    String?
   effectiveFrom DateTime
   effectiveTo   DateTime?
+  reason        String?  @db.Text
   createdAt     DateTime @default(now())
 
   member     PersonnelMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -383,4 +386,20 @@ model PersonnelAssignmentHistory {
   @@index([memberId, effectiveFrom])
   @@index([departmentId])
   @@index([positionId])
+}
+
+
+model PersonnelStatusHistory {
+  id            String          @id @default(cuid())
+  memberId      String
+  status        PersonnelStatus
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  reason        String?         @db.Text
+  createdAt     DateTime        @default(now())
+
+  member PersonnelMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, effectiveFrom])
+  @@index([status])
 }

@@ -287,6 +287,13 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
             effectiveFrom: input.admissionDate,
           },
         }),
+        tx.personnelStatusHistory.create({
+          data: {
+            memberId: member.id,
+            status: "ACTIVE",
+            effectiveFrom: input.admissionDate,
+          },
+        }),
       ]);
 
       await writeAudit(tx, {
@@ -574,6 +581,9 @@ export async function getPersonnelMember(memberId: string) {
           department: { select: { name: true } },
           position: { select: { name: true } },
         },
+      },
+      statusHistory: {
+        orderBy: { effectiveFrom: "desc" },
       },
     },
   });
