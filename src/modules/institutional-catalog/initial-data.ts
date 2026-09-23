@@ -26,6 +26,7 @@ export const INITIAL_DEPARTMENTS = [
 ] as const;
 
 export const INITIAL_RANKS = [
+  { name: "Aspirante", category: "Ingreso", hierarchy: 0 },
   { name: "Raso", category: "Alistados", hierarchy: 1 },
   { name: "Cabo", category: "Alistados", hierarchy: 2 },
   { name: "Sargento", category: "Alistados", hierarchy: 3 },
