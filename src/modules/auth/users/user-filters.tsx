@@ -27,6 +27,7 @@ export function UserFilters({ initialQuery, initialStatus }: UserFiltersProps) {
 
       if (normalized) params.set("q", normalized);
       else params.delete("q");
+      params.delete("page");
 
       const nextSearch = params.toString();
       const nextHref = nextSearch ? `${pathname}?${nextSearch}` : pathname;
@@ -44,6 +45,7 @@ export function UserFilters({ initialQuery, initialStatus }: UserFiltersProps) {
     const params = new URLSearchParams(currentSearch);
     if (status === "active") params.delete("status");
     else params.set("status", status);
+    params.delete("page");
 
     const nextSearch = params.toString();
     if (nextSearch === currentSearch) return;
@@ -59,7 +61,7 @@ export function UserFilters({ initialQuery, initialStatus }: UserFiltersProps) {
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar por nombre o correo..."
+          placeholder="Buscar por nombre, usuario, código o correo..."
           className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-4 focus:ring-red-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-red-950/40"
         />
       </label>

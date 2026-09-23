@@ -12,6 +12,7 @@ import {
 } from "@/modules/auth/permissions/authorization";
 import type { AuthorizationContext } from "@/modules/auth/permissions/types";
 import type { PermissionKey } from "@/modules/auth/permissions/catalog";
+import { resolvePagination, type PaginationInput } from "@/lib/pagination";
 import { assertSecurityAdministratorRemains } from "@/modules/auth/security-guards";
 import {
   normalizeName,
@@ -48,45 +49,55 @@ function assertCanDelegateRoles(actor: AuthorizationContext, roles: Awaited<Retu
   assertCanDelegatePermissions(actor, [...new Set(permissionKeys)]);
 }
 
-export async function listUsers(filters: { query?: string; status?: UserStatusFilter } = {}) {
+export async function listUsers(
+  filters: {
+    query?: string;
+    status?: UserStatusFilter;
+  } & PaginationInput = {},
+) {
   await requirePermission("usuarios.view");
   const query = filters.query?.trim();
   const status = filters.status ?? "active";
+  const where = {
+    ...(status === "all" ? {} : { isActive: status === "active" }),
+    ...(query
+      ? {
+          OR: [
+            { name: { contains: query, mode: "insensitive" as const } },
+            { username: { contains: query, mode: "insensitive" as const } },
+            { email: { contains: query, mode: "insensitive" as const } },
+            {
+              personnelMember: {
+                is: {
+                  institutionalCode: { contains: query, mode: "insensitive" as const },
+                },
+              },
+            },
+            {
+              personnelMember: {
+                is: {
+                  firstNames: { contains: query, mode: "insensitive" as const },
+                },
+              },
+            },
+            {
+              personnelMember: {
+                is: {
+                  lastNames: { contains: query, mode: "insensitive" as const },
+                },
+              },
+            },
+          ],
+        }
+      : {}),
+  };
 
-  return prisma.user.findMany({
-    where: {
-      ...(status === "all" ? {} : { isActive: status === "active" }),
-      ...(query
-        ? {
-            OR: [
-              { name: { contains: query, mode: "insensitive" } },
-              { username: { contains: query, mode: "insensitive" } },
-              { email: { contains: query, mode: "insensitive" } },
-              {
-                personnelMember: {
-                  is: {
-                    institutionalCode: { contains: query, mode: "insensitive" },
-                  },
-                },
-              },
-              {
-                personnelMember: {
-                  is: {
-                    firstNames: { contains: query, mode: "insensitive" },
-                  },
-                },
-              },
-              {
-                personnelMember: {
-                  is: {
-                    lastNames: { contains: query, mode: "insensitive" },
-                  },
-                },
-              },
-            ],
-          }
-        : {}),
-    },
+  const total = await prisma.user.count({ where });
+  const pagination = resolvePagination(total, filters);
+  const items = await prisma.user.findMany({
+    where,
+    skip: (pagination.page - 1) * pagination.pageSize,
+    take: pagination.pageSize,
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -114,6 +125,25 @@ export async function listUsers(filters: { query?: string; status?: UserStatusFi
       },
     },
   });
+
+  return { items, ...pagination };
+}
+
+export async function getUserCounts() {
+  await requirePermission("usuarios.view");
+  const [total, active, withRoles] = await prisma.$transaction([
+    prisma.user.count(),
+    prisma.user.count({ where: { isActive: true } }),
+    prisma.user.count({ where: { roles: { some: {} } } }),
+  ]);
+
+  return {
+    total,
+    active,
+    inactive: total - active,
+    withRoles,
+    withoutRoles: total - withRoles,
+  };
 }
 
 export async function getUser(userId: string) {
