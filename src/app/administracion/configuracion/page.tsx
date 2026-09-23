@@ -70,7 +70,7 @@ export default async function InstitutionalSettingsPage({ searchParams }: Props)
 
       <ContentPanel title="Logo institucional" description="Logo oficial utilizado en documentos emitidos por la institución.">
         <div className="grid gap-4 p-5 sm:p-6">
-          {settings?.logoMimeType ? <div className="flex items-center gap-4"><Image src="/api/institution/logo" alt="Logo institucional actual" width={224} height={80} unoptimized className="h-20 max-w-56 rounded-lg border border-slate-200 bg-white object-contain p-2 dark:border-slate-700" /><span className="text-sm text-slate-600 dark:text-slate-300">Logo actual</span></div> : null}
+          {settings?.logoMimeType ? <div className="flex items-center gap-4"><Image src={`/api/institution/logo?v=${settings.updatedAt.getTime()}`} alt="Logo institucional actual" width={224} height={80} unoptimized className="h-20 max-w-56 rounded-lg border border-slate-200 bg-white object-contain p-2 dark:border-slate-700" /><span className="text-sm text-slate-600 dark:text-slate-300">Logo actual</span></div> : null}
           <div><label htmlFor="logo" className="text-sm font-semibold text-slate-700 dark:text-slate-200">Seleccionar logo</label><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">PNG, JPG o WebP. Máximo 2 MB. Si no seleccionas un archivo, se conserva el logo actual.</p><InstitutionalLogoInput className={inputClass} /></div>
         </div>
       </ContentPanel>
