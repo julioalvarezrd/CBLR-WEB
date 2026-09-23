@@ -609,6 +609,7 @@ export async function getPersonnelMember(memberId: string) {
       rank: { select: { id: true, name: true } },
       department: { select: { id: true, name: true } },
       position: { select: { id: true, name: true } },
+      station: { select: { id: true, code: true, name: true } },
       recommender: {
         select: {
           id: true,
