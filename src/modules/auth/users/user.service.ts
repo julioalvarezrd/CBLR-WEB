@@ -205,7 +205,7 @@ export async function getPersonnelForUserIntegration(code: string) {
       rank: { select: { name: true } },
       department: { select: { name: true } },
       position: { select: { name: true } },
-      user: { select: { id: true, email: true, isActive: true } },
+      user: { select: { id: true, username: true, isActive: true } },
     },
   });
 }
@@ -260,7 +260,7 @@ export async function createUser(input: {
         institutionalCode: true,
         firstNames: true,
         lastNames: true,
-        user: { select: { id: true, email: true } },
+        user: { select: { id: true, username: true } },
       },
     });
 
@@ -269,7 +269,7 @@ export async function createUser(input: {
     }
     if (member.user) {
       throw new ConflictError(
-        `El miembro ${member.institutionalCode} ya está vinculado al usuario ${member.user.email}.`,
+        `El miembro ${member.institutionalCode} ya está vinculado al usuario ${member.user.username}.`,
       );
     }
 
@@ -305,11 +305,11 @@ export async function createUser(input: {
     if (personnelMemberId) {
       const linkedUser = await tx.user.findUnique({
         where: { personnelMemberId },
-        select: { id: true, email: true },
+        select: { id: true, username: true },
       });
       if (linkedUser) {
         throw new ConflictError(
-          `Ese miembro ya está vinculado al usuario ${linkedUser.email}.`,
+          `Ese miembro ya está vinculado al usuario ${linkedUser.username}.`,
         );
       }
     }

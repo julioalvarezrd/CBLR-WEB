@@ -59,7 +59,7 @@ export default async function UserPage({
       <ModuleHeader
         eyebrow="Administración"
         title={displayName}
-        description={user.email}
+        description={user.username}
         action={
           <StatusBadge tone={user.isActive ? "success" : "neutral"}>
             {user.isActive ? "Activo" : "Inactivo"}
@@ -151,7 +151,13 @@ export default async function UserPage({
           </div>
         ) : (
           <div className="p-5 text-sm text-slate-500 dark:text-slate-400 sm:p-6">
-            Nombre manual: <span className="font-semibold text-slate-800 dark:text-slate-200">{user.name}</span>
+            <p>
+              Nombre manual: <span className="font-semibold text-slate-800 dark:text-slate-200">{user.name}</span>
+            </p>
+            <p className="mt-2">
+              Usuario: <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{user.username}</span>
+            </p>
+            {user.email ? <p className="mt-2">Correo: {user.email}</p> : null}
           </div>
         )}
       </ContentPanel>

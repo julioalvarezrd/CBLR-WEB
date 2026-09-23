@@ -25,7 +25,7 @@ type PersonnelLookupResult = {
   rank: { name: string };
   department: { name: string } | null;
   position: { name: string } | null;
-  user: { id: string; email: string; isActive: boolean } | null;
+  user: { id: string; username: string; isActive: boolean } | null;
 };
 
 type NewUserFormProps = {
@@ -212,7 +212,7 @@ export function NewUserForm({ roles, canAssignRoles }: NewUserFormProps) {
 
                 {member.user ? (
                   <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-                    Este miembro ya está vinculado al usuario {member.user.email}.
+                    Este miembro ya está vinculado al usuario {member.user.username}.
                   </div>
                 ) : (
                   <p className="mt-4 text-xs font-medium text-emerald-700 dark:text-emerald-400">
