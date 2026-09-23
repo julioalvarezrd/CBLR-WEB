@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { ContentPanel } from "@/components/ui/content-panel";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -26,7 +27,7 @@ function DataCard({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-5 py-4 dark:border-slate-800 dark:bg-slate-950/40">
@@ -174,12 +175,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </div>
 
-        <div
-          className="grid border-t border-slate-200 dark:border-slate-800"
-          style={{
-            gridTemplateColumns: `repeat(${statCards.length}, minmax(0, 1fr))`,
-          }}
-        >
+        <div className="grid grid-cols-2 border-t border-slate-200 dark:border-slate-800 md:grid-cols-3 xl:grid-cols-5">
           {statCards.map((stat) => (
             <div
               key={stat.key}

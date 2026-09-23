@@ -372,6 +372,7 @@ export async function getPersonnelMemberForEdit(memberId: string) {
       rank: { select: { id: true, name: true } },
       department: { select: { id: true, name: true } },
       position: { select: { id: true, name: true } },
+      station: { select: { id: true, code: true, name: true } },
       recommender: {
         select: {
           id: true,
@@ -581,6 +582,7 @@ export async function listPersonnel(
       rank: { select: { name: true } },
       department: { select: { name: true } },
       position: { select: { name: true } },
+      station: { select: { code: true, name: true } },
     },
   });
 
@@ -630,6 +632,12 @@ export async function getPersonnelMember(memberId: string) {
       },
       statusHistory: {
         orderBy: { effectiveFrom: "desc" },
+      },
+      stationHistory: {
+        orderBy: { effectiveFrom: "desc" },
+        include: {
+          station: { select: { code: true, name: true } },
+        },
       },
     },
   });
