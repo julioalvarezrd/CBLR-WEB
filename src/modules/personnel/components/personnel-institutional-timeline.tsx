@@ -37,15 +37,24 @@ type PersonnelStatusHistoryEntry = {
   reason: string | null;
 };
 
+type PersonnelStationHistoryEntry = {
+  id: string;
+  effectiveFrom: Date;
+  effectiveTo: Date | null;
+  reason: string | null;
+  station: { code: string; name: string };
+};
+
 type PersonnelInstitutionalTimelineProps = {
   admissionDate: Date;
   typeHistory: PersonnelTypeHistoryEntry[];
   rankHistory: PersonnelRankHistoryEntry[];
   assignmentHistory: PersonnelAssignmentHistoryEntry[];
+  stationHistory: PersonnelStationHistoryEntry[];
   statusHistory: PersonnelStatusHistoryEntry[];
 };
 
-type TimelineCategory = "type" | "rank" | "assignment" | "status";
+type TimelineCategory = "type" | "rank" | "assignment" | "station" | "status";
 
 type TimelineEvent = {
   id: string;
@@ -74,6 +83,7 @@ const categoryLabels: Record<TimelineCategory, string> = {
   type: "Tipo de personal",
   rank: "Rango",
   assignment: "Asignación",
+  station: "Cuartel",
   status: "Estado",
 };
 
@@ -81,6 +91,7 @@ const categoryInitials: Record<TimelineCategory, string> = {
   type: "T",
   rank: "R",
   assignment: "A",
+  station: "C",
   status: "E",
 };
 
@@ -125,6 +136,7 @@ function buildTimelineGroups({
   typeHistory,
   rankHistory,
   assignmentHistory,
+  stationHistory,
   statusHistory,
 }: PersonnelInstitutionalTimelineProps): TimelineGroup[] {
   const events = [
@@ -153,6 +165,15 @@ function buildTimelineGroups({
       (entry) => entry.effectiveFrom,
       (entry) => entry.effectiveTo,
       (entry) => assignmentValue(entry.department, entry.position),
+      (entry) => entry.reason,
+    ),
+    ...buildEvents(
+      "station",
+      stationHistory,
+      (entry) => entry.id,
+      (entry) => entry.effectiveFrom,
+      (entry) => entry.effectiveTo,
+      (entry) => `${entry.station.code} — ${entry.station.name}`,
       (entry) => entry.reason,
     ),
     ...buildEvents(
@@ -195,6 +216,8 @@ function eventTitle(event: TimelineEvent): string {
       return "Cambio de rango";
     case "assignment":
       return "Cambio de asignación";
+    case "station":
+      return "Cambio de cuartel";
     case "status":
       return "Cambio de estado";
     case "type":

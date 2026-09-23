@@ -107,6 +107,13 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
           <DetailItem label="Rango">{member.rank.name}</DetailItem>
           <DetailItem label="Departamento">{member.department?.name || "Sin asignar"}</DetailItem>
           <DetailItem label="Cargo">{member.position?.name || "Sin asignar"}</DetailItem>
+          {member.personnelType === "FIXED" ? (
+            <DetailItem label="Cuartel">
+              {member.station
+                ? member.station.code + " — " + member.station.name
+                : "Pendiente de asignación"}
+            </DetailItem>
+          ) : null}
           <DetailItem label="Horas históricas">{String(member.historicalHours)}</DetailItem>
         </dl>
       </ContentPanel>
@@ -210,6 +217,7 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
           typeHistory={member.typeHistory}
           rankHistory={member.rankHistory}
           assignmentHistory={member.assignmentHistory}
+          stationHistory={member.stationHistory}
           statusHistory={member.statusHistory}
         />
       </ContentPanel>
