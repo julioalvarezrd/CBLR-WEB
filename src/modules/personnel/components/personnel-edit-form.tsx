@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -16,6 +15,7 @@ import {
   type EducationLevelValue,
 } from "@/modules/personnel/constants";
 import { DocumentFields } from "@/modules/personnel/components/document-fields";
+import { PersonnelPhotoInput } from "@/modules/personnel/components/personnel-photo-input";
 import { updatePersonnelMemberAction } from "@/modules/personnel/personnel.actions";
 
 const inputClassName =
@@ -164,20 +164,18 @@ export function PersonnelEditForm({values}:{values:PersonnelEditValues}) {
       <input type="hidden" name="positionId" value={values.positionId} />
       <input type="hidden" name="historicalHours" value={values.historicalHours} />
 
-      <ContentPanel title="Foto y datos personales" description="La foto es opcional. Los cambios institucionales de rango, tipo y asignación se gestionan por separado para conservar sus historiales.">
+      <ContentPanel title="Datos personales" description="La foto es opcional. Los cambios institucionales de rango, tipo y asignación se gestionan por separado para conservar sus historiales.">
         <div className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-3 sm:p-6">
-          <div>
-            <label htmlFor="photo" className={labelClassName}>Foto</label>
-            {values.hasPhoto ? (
-              <Image src={`/api/personal/${values.id}/foto?v=${values.photoVersion}`} alt="Foto actual del miembro" width={144} height={144} unoptimized className="mt-2 h-28 w-28 rounded-xl object-cover" />
-            ) : null}
-            <input id="photo" name="photo" type="file" accept="image/png,image/jpeg,image/webp" className={inputClassName} />
-            <p className={hintClassName}>JPG, PNG o WebP, máximo 5 MB.</p>
-            {values.hasPhoto ? (
-              <label className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                <input type="checkbox" name="removePhoto" className="accent-red-700" /> Quitar foto actual
-              </label>
-            ) : null}
+          <div className="sm:col-span-2 lg:col-span-3">
+            <PersonnelPhotoInput
+              initialPhotoUrl={
+                values.hasPhoto
+                  ? `/api/personal/${values.id}/foto?v=${values.photoVersion}`
+                  : null
+              }
+              alt={`Fotografía de ${values.firstNames} ${values.lastNames}`}
+              initials={`${values.firstNames} ${values.lastNames}`}
+            />
           </div>
           <div>
             <label htmlFor="firstNames" className={labelClassName}>Nombres</label>
