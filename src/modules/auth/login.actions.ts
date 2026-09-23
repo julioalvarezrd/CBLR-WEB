@@ -6,12 +6,12 @@ import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/auth";
 
 export async function loginAction(formData: FormData): Promise<void> {
-  const email = formData.get("email");
+  const username = formData.get("username");
   const password = formData.get("password");
 
   try {
     await signIn("credentials", {
-      email: typeof email === "string" ? email : "",
+      username: typeof username === "string" ? username : "",
       password: typeof password === "string" ? password : "",
       redirectTo: "/inicio",
     });

@@ -39,6 +39,10 @@ export default async function SetupPage({ searchParams }: SetupPageProps) {
 
           <form action={initializeSecurityAction} className="mt-8 space-y-5">
             <div>
+              <label htmlFor="username" className="text-sm font-medium text-slate-700 dark:text-slate-200">Nombre de usuario</label>
+              <input id="username" name="username" autoComplete="username" placeholder="Ej. administrador" required className={inputClassName} />
+            </div>
+            <div>
               <label htmlFor="name" className="text-sm font-medium text-slate-700 dark:text-slate-200">Nombre</label>
               <input id="name" name="name" required className={inputClassName} />
             </div>

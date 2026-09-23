@@ -15,6 +15,7 @@ export async function initializeSecurityAction(
 ): Promise<void> {
   try {
     await initializeSecurity({
+      username: getText(formData, "username"),
       name: getText(formData, "name"),
       email: getText(formData, "email"),
       password: getText(formData, "password"),
