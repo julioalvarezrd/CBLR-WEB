@@ -15,7 +15,7 @@ export async function GET() {
   return new Response(Buffer.from(settings.logoData), {
     headers: {
       "Content-Type": settings.logoMimeType,
-      "Cache-Control": "private, max-age=300",
+      "Cache-Control": "no-store, max-age=0",
       "X-Content-Type-Options": "nosniff",
     },
   });
