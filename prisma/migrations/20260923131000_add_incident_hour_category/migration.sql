@@ -1,0 +1,2 @@
+ALTER TYPE "PersonnelHourCategory"
+ADD VALUE IF NOT EXISTS 'INCIDENT';

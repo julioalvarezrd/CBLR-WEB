@@ -127,12 +127,14 @@ export async function getMyProfile() {
 
   const confirmedMinutes = {
     guards: 0,
+    incidents: 0,
     operations: 0,
     volunteerServices: 0,
   };
 
   for (const entry of member.hourEntries) {
     if (entry.category === "GUARD") confirmedMinutes.guards += entry.minutes;
+    if (entry.category === "INCIDENT") confirmedMinutes.incidents += entry.minutes;
     if (entry.category === "OPERATION") confirmedMinutes.operations += entry.minutes;
     if (entry.category === "VOLUNTEER_SERVICE") {
       confirmedMinutes.volunteerServices += entry.minutes;
@@ -142,6 +144,7 @@ export async function getMyProfile() {
   const historicalMinutes = decimalHoursToMinutes(member.historicalHours);
   const registeredMinutes =
     confirmedMinutes.guards +
+    confirmedMinutes.incidents +
     confirmedMinutes.operations +
     confirmedMinutes.volunteerServices;
 
@@ -176,6 +179,7 @@ export async function getMyProfile() {
       stats: {
         historicalMinutes,
         guardsMinutes: confirmedMinutes.guards,
+        incidentsMinutes: confirmedMinutes.incidents,
         operationsMinutes: confirmedMinutes.operations,
         volunteerServicesMinutes: confirmedMinutes.volunteerServices,
         registeredMinutes,

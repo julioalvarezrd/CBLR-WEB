@@ -62,6 +62,7 @@ enum EducationLevel {
 
 enum PersonnelHourCategory {
   GUARD
+  INCIDENT
   OPERATION
   VOLUNTEER_SERVICE
 }
