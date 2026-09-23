@@ -10,6 +10,7 @@ type MovementInput = {
 
 export type PersonnelTypeMovementInput = MovementInput & {
   personnelType: string;
+  stationId: string;
 };
 
 export type RankMovementInput = MovementInput & {
@@ -23,6 +24,10 @@ export type AssignmentMovementInput = MovementInput & {
 
 export type StatusMovementInput = MovementInput & {
   status: string;
+};
+
+export type StationMovementInput = MovementInput & {
+  stationId: string;
 };
 
 function parseEffectiveDate(value: string): Date {
@@ -71,7 +76,7 @@ function validateEffectiveDate(
 export async function getPersonnelMovementOptions(memberId: string) {
   await requirePermission("personal.edit");
 
-  const [member, ranks, departments, positions] = await Promise.all([
+  const [member, ranks, departments, positions, stations] = await Promise.all([
     prisma.personnelMember.findUnique({
       where: { id: memberId },
       select: {
@@ -85,9 +90,11 @@ export async function getPersonnelMovementOptions(memberId: string) {
         rankId: true,
         departmentId: true,
         positionId: true,
+        stationId: true,
         rank: { select: { name: true } },
         department: { select: { name: true } },
         position: { select: { name: true } },
+        station: { select: { code: true, name: true } },
         typeHistory: {
           where: { effectiveTo: null },
           orderBy: { effectiveFrom: "desc" },
@@ -112,6 +119,12 @@ export async function getPersonnelMovementOptions(memberId: string) {
           take: 1,
           select: { effectiveFrom: true },
         },
+        stationHistory: {
+          where: { effectiveTo: null },
+          orderBy: { effectiveFrom: "desc" },
+          take: 1,
+          select: { effectiveFrom: true },
+        },
       },
     }),
     prisma.rank.findMany({
@@ -129,6 +142,11 @@ export async function getPersonnelMovementOptions(memberId: string) {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, departmentId: true },
     }),
+    prisma.station.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, code: true, name: true, type: true },
+    }),
   ]);
 
   if (!member) throw new ValidationError("El miembro indicado no existe.");
@@ -143,7 +161,7 @@ export async function getPersonnelMovementOptions(memberId: string) {
     );
   }
 
-  return { member, ranks, departments, positions };
+  return { member, ranks, departments, positions, stations };
 }
 
 export async function changePersonnelType(
@@ -153,6 +171,7 @@ export async function changePersonnelType(
   const actor = await requirePermission("personal.edit");
   const effectiveDate = parseEffectiveDate(input.effectiveDate);
   const reason = normalizeReason(input.reason);
+  const requestedStationId = input.stationId.trim() || null;
 
   if (input.personnelType !== "VOLUNTEER" && input.personnelType !== "FIXED") {
     throw new ValidationError("El tipo de personal seleccionado no es válido.");
@@ -166,6 +185,8 @@ export async function changePersonnelType(
         id: true,
         admissionDate: true,
         personnelType: true,
+        stationId: true,
+        station: { select: { code: true, name: true } },
       },
     });
     if (!member) throw new ValidationError("El miembro indicado no existe.");
@@ -192,14 +213,54 @@ export async function changePersonnelType(
       effectiveDate,
     );
 
+    let nextStationId: string | null = null;
+    let nextStation: { code: string; name: string } | null = null;
+    const currentStationHistory = await tx.personnelStationHistory.findFirst({
+      where: { memberId, effectiveTo: null },
+      orderBy: { effectiveFrom: "desc" },
+      select: { id: true, effectiveFrom: true },
+    });
+
+    if (personnelType === "FIXED") {
+      if (!requestedStationId) {
+        throw new ValidationError(
+          "Debes seleccionar el cuartel al incorporar un miembro al personal fijo.",
+        );
+      }
+
+      const station = await tx.station.findUnique({
+        where: { id: requestedStationId },
+        select: { id: true, code: true, name: true, isActive: true },
+      });
+
+      if (!station?.isActive) {
+        throw new ValidationError("El cuartel seleccionado no existe o está inactivo.");
+      }
+
+      nextStationId = station.id;
+      nextStation = { code: station.code, name: station.name };
+    }
+
     await tx.personnelTypeHistory.update({
       where: { id: currentHistory.id },
       data: { effectiveTo: previousDay(effectiveDate) },
     });
+
+    if (currentStationHistory) {
+      await tx.personnelStationHistory.update({
+        where: { id: currentStationHistory.id },
+        data: { effectiveTo: previousDay(effectiveDate) },
+      });
+    }
+
     await tx.personnelMember.update({
       where: { id: memberId },
-      data: { personnelType },
+      data: {
+        personnelType,
+        stationId: nextStationId,
+      },
     });
+
     await tx.personnelTypeHistory.create({
       data: {
         memberId,
@@ -209,13 +270,32 @@ export async function changePersonnelType(
       },
     });
 
+    if (nextStationId) {
+      await tx.personnelStationHistory.create({
+        data: {
+          memberId,
+          stationId: nextStationId,
+          effectiveFrom: effectiveDate,
+          reason,
+        },
+      });
+    }
+
     await writeAudit(tx, {
       actorUserId: actor.user.id,
       action: "personnel.type.changed",
       entityType: "PersonnelMember",
       entityId: memberId,
-      before: { personnelType: member.personnelType },
-      after: { personnelType },
+      before: {
+        personnelType: member.personnelType,
+        stationId: member.stationId,
+        station: member.station,
+      },
+      after: {
+        personnelType,
+        stationId: nextStationId,
+        station: nextStation,
+      },
       metadata: { effectiveDate: input.effectiveDate, reason },
     });
   });
@@ -397,6 +477,108 @@ export async function changePersonnelAssignment(
         positionName: member.position?.name ?? null,
       },
       after: { departmentId, departmentName, positionId, positionName },
+      metadata: { effectiveDate: input.effectiveDate, reason },
+    });
+  });
+}
+
+export async function changePersonnelStation(
+  memberId: string,
+  input: StationMovementInput,
+) {
+  const actor = await requirePermission("personal.edit");
+  const effectiveDate = parseEffectiveDate(input.effectiveDate);
+  const reason = normalizeReason(input.reason);
+  const stationId = input.stationId.trim();
+
+  if (!stationId) {
+    throw new ValidationError("Debes seleccionar el nuevo cuartel.");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const member = await tx.personnelMember.findUnique({
+      where: { id: memberId },
+      select: {
+        id: true,
+        admissionDate: true,
+        personnelType: true,
+        stationId: true,
+        station: { select: { code: true, name: true } },
+      },
+    });
+
+    if (!member) throw new ValidationError("El miembro indicado no existe.");
+    if (member.personnelType !== "FIXED") {
+      throw new ValidationError(
+        "Solo el personal fijo puede tener un cuartel asignado.",
+      );
+    }
+    if (member.stationId === stationId) {
+      throw new ValidationError("El nuevo cuartel debe ser diferente al actual.");
+    }
+
+    const [station, currentHistory] = await Promise.all([
+      tx.station.findUnique({
+        where: { id: stationId },
+        select: { id: true, code: true, name: true, isActive: true },
+      }),
+      tx.personnelStationHistory.findFirst({
+        where: { memberId, effectiveTo: null },
+        orderBy: { effectiveFrom: "desc" },
+        select: { id: true, effectiveFrom: true },
+      }),
+    ]);
+
+    if (!station?.isActive) {
+      throw new ValidationError("El cuartel seleccionado no existe o está inactivo.");
+    }
+
+    if (effectiveDate.getTime() < member.admissionDate.getTime()) {
+      throw new ValidationError(
+        "La fecha efectiva no puede ser anterior a la fecha de ingreso.",
+      );
+    }
+
+    if (currentHistory) {
+      validateEffectiveDate(
+        member.admissionDate,
+        currentHistory.effectiveFrom,
+        effectiveDate,
+      );
+
+      await tx.personnelStationHistory.update({
+        where: { id: currentHistory.id },
+        data: { effectiveTo: previousDay(effectiveDate) },
+      });
+    }
+
+    await tx.personnelMember.update({
+      where: { id: memberId },
+      data: { stationId: station.id },
+    });
+
+    await tx.personnelStationHistory.create({
+      data: {
+        memberId,
+        stationId: station.id,
+        effectiveFrom: effectiveDate,
+        reason,
+      },
+    });
+
+    await writeAudit(tx, {
+      actorUserId: actor.user.id,
+      action: "personnel.station.changed",
+      entityType: "PersonnelMember",
+      entityId: memberId,
+      before: {
+        stationId: member.stationId,
+        station: member.station,
+      },
+      after: {
+        stationId: station.id,
+        station: { code: station.code, name: station.name },
+      },
       metadata: { effectiveDate: input.effectiveDate, reason },
     });
   });
