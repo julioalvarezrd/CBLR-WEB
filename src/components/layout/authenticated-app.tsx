@@ -68,7 +68,7 @@ export async function AuthenticatedApp({ children }: AuthenticatedAppProps) {
   return (
     <AppShell
       navigation={navigation}
-      user={{ name: context.user.name, email: context.user.email }}
+      user={{ name: context.user.name, username: context.user.username }}
     >
       {children}
     </AppShell>
