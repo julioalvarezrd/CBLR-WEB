@@ -35,6 +35,7 @@ function readPersonnelInput(formData: FormData) {
     rankId: getText(formData, "rankId"),
     departmentId: getText(formData, "departmentId"),
     positionId: getText(formData, "positionId"),
+    stationId: getText(formData, "stationId"),
     historicalHours: getText(formData, "historicalHours"),
     firstNames: getText(formData, "firstNames"),
     lastNames: getText(formData, "lastNames"),

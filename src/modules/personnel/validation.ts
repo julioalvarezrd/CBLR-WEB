@@ -23,6 +23,7 @@ export type CreatePersonnelInput = {
   rankId: string;
   departmentId: string;
   positionId: string;
+  stationId?: string;
   historicalHours: string;
   firstNames: string;
   lastNames: string;
@@ -72,6 +73,7 @@ export type NormalizedPersonnelInput = {
   rankId: string | null;
   departmentId: string | null;
   positionId: string | null;
+  stationId: string | null;
   historicalHours: number;
   firstNames: string;
   lastNames: string;
@@ -274,6 +276,7 @@ export function normalizePersonnelInput(input: CreatePersonnelInput): Normalized
     rankId: optionalText(input.rankId, "El rango", 100),
     departmentId: optionalText(input.departmentId, "El departamento", 100),
     positionId: optionalText(input.positionId, "El cargo", 100),
+    stationId: optionalText(input.stationId ?? "", "El cuartel", 100),
     historicalHours,
     firstNames: requiredText(input.firstNames, "Los nombres"),
     lastNames: requiredText(input.lastNames, "Los apellidos"),

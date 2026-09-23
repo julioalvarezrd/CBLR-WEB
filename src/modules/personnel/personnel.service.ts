@@ -55,7 +55,7 @@ function isPrismaUniqueConstraintError(error: unknown): boolean {
 export async function getPersonnelRegistrationOptions() {
   await requirePermission("personal.create");
 
-  const [ranks, departments, positions] = await Promise.all([
+  const [ranks, departments, positions, stations] = await Promise.all([
     prisma.rank.findMany({
       where: { isActive: true },
       orderBy: { hierarchy: "asc" },
@@ -71,9 +71,14 @@ export async function getPersonnelRegistrationOptions() {
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, departmentId: true },
     }),
+    prisma.station.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, code: true, name: true, type: true },
+    }),
   ]);
 
-  return { ranks, departments, positions };
+  return { ranks, departments, positions, stations };
 }
 
 export async function getRecommenderByCode(code: string) {
@@ -169,6 +174,24 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
         positionId = position.id;
       }
 
+      let stationId: string | null = null;
+      if (input.personnelType === "FIXED") {
+        if (!input.stationId) {
+          throw new ValidationError("El cuartel es obligatorio para el personal fijo.");
+        }
+
+        const station = await tx.station.findUnique({
+          where: { id: input.stationId },
+          select: { id: true, isActive: true },
+        });
+
+        if (!station?.isActive) {
+          throw new ValidationError("El cuartel seleccionado no existe o está inactivo.");
+        }
+
+        stationId = station.id;
+      }
+
       let recommendedByMemberId: string | null = null;
       if (input.wasRecommended && input.recommenderCode) {
         const recommender = await tx.personnelMember.findUnique({
@@ -208,6 +231,7 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
           rankId,
           departmentId,
           positionId,
+          stationId,
           historicalHours: input.historicalHours,
           firstNames: input.firstNames,
           lastNames: input.lastNames,
@@ -261,6 +285,7 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
           rankId: true,
           departmentId: true,
           positionId: true,
+          stationId: true,
           status: true,
         },
       });
@@ -295,6 +320,17 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
             effectiveFrom: input.admissionDate,
           },
         }),
+        ...(stationId
+          ? [
+              tx.personnelStationHistory.create({
+                data: {
+                  memberId: member.id,
+                  stationId,
+                  effectiveFrom: input.admissionDate,
+                },
+              }),
+            ]
+          : []),
       ]);
 
       await writeAudit(tx, {
@@ -310,6 +346,7 @@ export async function createPersonnelMember(rawInput: CreatePersonnelInput, rawP
           rankId: member.rankId,
           departmentId: member.departmentId,
           positionId: member.positionId,
+          stationId: member.stationId,
           status: member.status,
         },
       });
