@@ -13,6 +13,7 @@ import {
   PERSONNEL_TYPE_LABELS,
   SEX_LABELS,
 } from "@/modules/personnel/constants";
+import { PersonnelInstitutionalTimeline } from "@/modules/personnel/components/personnel-institutional-timeline";
 import { PersonnelProfileHeader } from "@/modules/personnel/components/personnel-profile-header";
 import { getPersonnelMember } from "@/modules/personnel/personnel.service";
 
@@ -20,12 +21,6 @@ const dateFormatter = new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" });
 
 function formatDate(value: Date | null): string {
   return value ? dateFormatter.format(value) : "No registrado";
-}
-
-function formatPeriod(effectiveFrom: Date, effectiveTo: Date | null): string {
-  return effectiveTo
-    ? `${dateFormatter.format(effectiveFrom)} – ${dateFormatter.format(effectiveTo)}`
-    : `Desde ${dateFormatter.format(effectiveFrom)} · Vigente`;
 }
 
 function DetailItem({ label, children }: { label: string; children: ReactNode }) {
@@ -207,68 +202,15 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
 
       <ContentPanel
         title="Historial institucional"
-        description="Trayectoria de tipo de personal, rango, asignación y estado. Los movimientos vigentes no tienen fecha de cierre."
+        description="Línea de tiempo consolidada de la trayectoria institucional del miembro."
       >
-        <div className="grid gap-6 p-5 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Tipo de personal</h3>
-            <div className="mt-3 space-y-2">
-              {member.typeHistory.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">{PERSONNEL_TYPE_LABELS[entry.personnelType]}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Rango</h3>
-            <div className="mt-3 space-y-2">
-              {member.rankHistory.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">{entry.rank.name}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
-                  {entry.reason ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{entry.reason}</p> : null}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Departamento / cargo</h3>
-            <div className="mt-3 space-y-2">
-              {member.assignmentHistory.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">{entry.department?.name || "Sin departamento"}</p>
-                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">{entry.position?.name || "Sin cargo"}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
-                  {entry.reason ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{entry.reason}</p> : null}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Estado</h3>
-            <div className="mt-3 space-y-2">
-              {member.statusHistory.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-slate-800 dark:text-slate-200">
-                      {entry.status === "ACTIVE" ? "Activo" : "Inactivo"}
-                    </p>
-                    <StatusBadge tone={entry.status === "ACTIVE" ? "success" : "neutral"}>
-                      {entry.status === "ACTIVE" ? "Activo" : "Inactivo"}
-                    </StatusBadge>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatPeriod(entry.effectiveFrom, entry.effectiveTo)}</p>
-                  {entry.reason ? <p className="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">{entry.reason}</p> : null}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <PersonnelInstitutionalTimeline
+          admissionDate={member.admissionDate}
+          typeHistory={member.typeHistory}
+          rankHistory={member.rankHistory}
+          assignmentHistory={member.assignmentHistory}
+          statusHistory={member.statusHistory}
+        />
       </ContentPanel>
     </div>
   );
