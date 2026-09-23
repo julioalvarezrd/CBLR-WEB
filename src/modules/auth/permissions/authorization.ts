@@ -29,9 +29,12 @@ export async function getAuthorizationContext(): Promise<AuthorizationContext | 
       isActive: true,
       personnelMember: {
         select: {
+          id: true,
           institutionalCode: true,
           firstNames: true,
           lastNames: true,
+          photoMimeType: true,
+          updatedAt: true,
         },
       },
       roles: {
@@ -79,6 +82,9 @@ export async function getAuthorizationContext(): Promise<AuthorizationContext | 
       name: user.personnelMember
         ? `${user.personnelMember.firstNames} ${user.personnelMember.lastNames}`
         : user.name,
+      personnelMemberId: user.personnelMember?.id ?? null,
+      hasPhoto: Boolean(user.personnelMember?.photoMimeType),
+      photoVersion: user.personnelMember?.updatedAt.getTime() ?? null,
     },
     roles: activeRoles.map((role) => ({
       id: role.id,
