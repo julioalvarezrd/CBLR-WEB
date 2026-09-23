@@ -255,8 +255,8 @@ export function NewUserForm({ roles, canAssignRoles }: NewUserFormProps) {
               name="email"
               type="email"
               autoComplete="email"
-              value={mode === "personnel" ? email : undefined}
-              onChange={mode === "personnel" ? (event) => setEmail(event.target.value) : undefined}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               required
               className={inputClassName}
             />

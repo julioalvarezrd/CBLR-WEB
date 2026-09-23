@@ -77,8 +77,6 @@ model User {
   auditLogs             AuditLog[]       @relation("AuditActor")
   personnelCreated      PersonnelMember[] @relation("PersonnelMemberCreatedBy")
   personnelMember       PersonnelMember?   @relation("UserPersonnelMember", fields: [personnelMemberId], references: [id], onDelete: SetNull)
-
-  @@index([personnelMemberId])
 }
 
 model Role {
