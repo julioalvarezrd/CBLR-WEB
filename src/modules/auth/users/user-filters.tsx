@@ -14,24 +14,41 @@ export function UserFilters({ initialQuery, initialStatus }: UserFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const currentSearch = searchParams.toString();
   const [query, setQuery] = useState(initialQuery);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(currentSearch);
       const normalized = query.trim();
-      if (normalized) params.set("q", normalized); else params.delete("q");
-      const next = params.toString();
-      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+      const currentQuery = params.get("q")?.trim() ?? "";
+
+      if (normalized === currentQuery) return;
+
+      if (normalized) params.set("q", normalized);
+      else params.delete("q");
+
+      const nextSearch = params.toString();
+      const nextHref = nextSearch ? `${pathname}?${nextSearch}` : pathname;
+      const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+
+      if (nextHref !== currentHref) {
+        router.replace(nextHref, { scroll: false });
+      }
     }, 300);
+
     return () => window.clearTimeout(timeout);
-  }, [pathname, query, router, searchParams]);
+  }, [currentSearch, pathname, query, router]);
 
   function changeStatus(status: UserStatusFilter): void {
-    const params = new URLSearchParams(searchParams.toString());
-    if (status === "active") params.delete("status"); else params.set("status", status);
-    const next = params.toString();
-    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    const params = new URLSearchParams(currentSearch);
+    if (status === "active") params.delete("status");
+    else params.set("status", status);
+
+    const nextSearch = params.toString();
+    if (nextSearch === currentSearch) return;
+
+    router.replace(nextSearch ? `${pathname}?${nextSearch}` : pathname, { scroll: false });
   }
 
   return (
