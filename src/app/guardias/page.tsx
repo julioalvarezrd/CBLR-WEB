@@ -9,6 +9,7 @@ import { requirePagePermission } from "@/modules/auth/permissions/page-authoriza
 import {
   currentInstitutionalMonth,
   formatGuardDateTime,
+  formatGuardMonth,
   GUARD_STATUS_LABELS,
   type GuardStatusValue,
 } from "@/modules/guards/constants";
@@ -86,11 +87,12 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
           {
             label: "Guardias del mes",
             value: directory.stats.guards,
-            description: directory.month,
+            description: formatGuardMonth(directory.month).toLocaleLowerCase("es-DO"),
           },
           {
             label: "Por atender",
             value: directory.stats.pending,
+            tone: "info",
             description:
               String(directory.stats.planned) +
               " planificadas · " +
@@ -100,6 +102,7 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
           {
             label: "Finalizadas",
             value: directory.stats.finished,
+            tone: "success",
             description:
               String(directory.stats.attendanceClosedPercent) +
               "% asistencia cerrada",
@@ -107,12 +110,14 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
           {
             label: "Horas confirmadas",
             value: formatServiceMinutes(directory.stats.confirmedMinutes),
+            tone: "danger",
             description:
               String(directory.stats.confirmedAssignments) + " asignaciones",
           },
           {
             label: "Ausencias",
             value: directory.stats.absences,
+            tone: directory.stats.absences > 0 ? "danger" : "success",
             description: "Registradas en el período",
           },
         ]}
