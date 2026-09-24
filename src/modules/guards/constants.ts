@@ -52,3 +52,20 @@ export function currentInstitutionalMonth(): string {
   const month = parts.find((part) => part.type === "month")?.value;
   return `${year ?? "2000"}-${month ?? "01"}`;
 }
+
+export function formatGuardDateTimeInput(value: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: INSTITUTIONAL_TIME_ZONE,
+  }).formatToParts(value);
+
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? "";
+
+  return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+}
