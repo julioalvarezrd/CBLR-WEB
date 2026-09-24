@@ -60,6 +60,9 @@ export async function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     ...(context.permissions.has("personal.view")
       ? [{ label: "Personal", href: "/personal" }]
       : []),
+    ...(context.permissions.has("guardias.view")
+      ? [{ label: "Guardias", href: "/guardias" }]
+      : []),
     ...(administrationItems.length > 0
       ? [{ label: "Administración", items: administrationItems }]
       : []),
