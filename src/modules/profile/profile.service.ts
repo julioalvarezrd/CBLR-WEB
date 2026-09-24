@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { writeAudit } from "@/modules/auth/audit.service";
 import { AuthorizationError, ValidationError } from "@/modules/auth/errors";
 import { hashPassword, verifyPassword } from "@/modules/auth/password";
+import { buildPersonnelServiceSummary } from "@/modules/personnel/service-summary";
 
 async function currentUserId(): Promise<string> {
   const session = await auth();
@@ -13,11 +14,6 @@ async function currentUserId(): Promise<string> {
   }
 
   return userId;
-}
-
-function decimalHoursToMinutes(value: { toString(): string }): number {
-  const hours = Number(value.toString());
-  return Number.isFinite(hours) ? Math.round(hours * 60) : 0;
 }
 
 export async function getMyProfile() {
@@ -118,35 +114,11 @@ export async function getMyProfile() {
   }
 
   const member = user.personnelMember;
-  const hasFixedHistory = member.typeHistory.some(
-    (entry) => entry.personnelType === "FIXED",
-  );
-  const hasVolunteerHistory = member.typeHistory.some(
-    (entry) => entry.personnelType === "VOLUNTEER",
-  );
-
-  const confirmedMinutes = {
-    guards: 0,
-    incidents: 0,
-    operations: 0,
-    volunteerServices: 0,
-  };
-
-  for (const entry of member.hourEntries) {
-    if (entry.category === "GUARD") confirmedMinutes.guards += entry.minutes;
-    if (entry.category === "INCIDENT") confirmedMinutes.incidents += entry.minutes;
-    if (entry.category === "OPERATION") confirmedMinutes.operations += entry.minutes;
-    if (entry.category === "VOLUNTEER_SERVICE") {
-      confirmedMinutes.volunteerServices += entry.minutes;
-    }
-  }
-
-  const historicalMinutes = decimalHoursToMinutes(member.historicalHours);
-  const registeredMinutes =
-    confirmedMinutes.guards +
-    confirmedMinutes.incidents +
-    confirmedMinutes.operations +
-    confirmedMinutes.volunteerServices;
+  const serviceSummary = buildPersonnelServiceSummary({
+    historicalHours: member.historicalHours,
+    typeHistory: member.typeHistory,
+    hourEntries: member.hourEntries,
+  });
 
   return {
     user: {
@@ -173,18 +145,10 @@ export async function getMyProfile() {
         : null,
       hasPhoto: Boolean(member.photoMimeType),
       photoVersion: member.updatedAt.getTime(),
-      hasFixedHistory,
-      hasVolunteerHistory,
-      stationHistory: member.stationHistory,
-      stats: {
-        historicalMinutes,
-        guardsMinutes: confirmedMinutes.guards,
-        incidentsMinutes: confirmedMinutes.incidents,
-        operationsMinutes: confirmedMinutes.operations,
-        volunteerServicesMinutes: confirmedMinutes.volunteerServices,
-        registeredMinutes,
-        totalMinutes: historicalMinutes + registeredMinutes,
-      },
+      hasFixedHistory: serviceSummary.hasFixedHistory,
+      hasVolunteerHistory: serviceSummary.hasVolunteerHistory,
+      stationHistory: serviceSummary.hasFixedHistory ? member.stationHistory : [],
+      stats: serviceSummary.stats,
     },
   };
 }

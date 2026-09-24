@@ -3,6 +3,7 @@ import { writeAudit } from "@/modules/auth/audit.service";
 import { ConflictError, ValidationError } from "@/modules/auth/errors";
 import { requirePermission } from "@/modules/auth/permissions/authorization";
 import { resolvePagination, type PaginationInput } from "@/lib/pagination";
+import { buildPersonnelServiceSummary } from "@/modules/personnel/service-summary";
 import {
   normalizePersonnelInput,
   type CreatePersonnelInput,
@@ -640,9 +641,27 @@ export async function getPersonnelMember(memberId: string) {
           station: { select: { code: true, name: true } },
         },
       },
+      hourEntries: {
+        where: { confirmedAt: { not: null } },
+        select: {
+          category: true,
+          minutes: true,
+        },
+      },
     },
   });
 
   if (!member) throw new ValidationError("El miembro indicado no existe.");
-  return member;
+
+  const serviceSummary = buildPersonnelServiceSummary({
+    historicalHours: member.historicalHours,
+    typeHistory: member.typeHistory,
+    hourEntries: member.hourEntries,
+  });
+
+  return {
+    ...member,
+    stationHistory: serviceSummary.hasFixedHistory ? member.stationHistory : [],
+    serviceSummary,
+  };
 }

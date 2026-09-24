@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { ContentPanel } from "@/components/ui/content-panel";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { formatServiceMinutes } from "@/modules/personnel/service-summary";
 import { getMyProfile } from "@/modules/profile/profile.service";
 
 type ProfilePageProps = {
@@ -10,17 +11,6 @@ type ProfilePageProps = {
 };
 
 const dateFormatter = new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" });
-
-function formatMinutes(minutes: number): string {
-  if (minutes <= 0) return "0 min";
-
-  const hours = Math.floor(minutes / 60);
-  const remaining = minutes % 60;
-
-  if (hours === 0) return `${remaining} min`;
-  if (remaining === 0) return `${hours} h`;
-  return `${hours} h ${remaining} min`;
-}
 
 function DataCard({
   label,
@@ -106,7 +96,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     {
       key: "historical",
       label: "Históricas",
-      value: formatMinutes(personnel.stats.historicalMinutes),
+      value: formatServiceMinutes(personnel.stats.historicalMinutes),
       description: "Previas al registro en SIBOR",
     },
     ...(personnel.hasFixedHistory
@@ -114,7 +104,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           {
             key: "guards",
             label: "Guardias",
-            value: formatMinutes(personnel.stats.guardsMinutes),
+            value: formatServiceMinutes(personnel.stats.guardsMinutes),
             description: "Horas confirmadas",
           },
         ]
@@ -122,13 +112,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     {
       key: "incidents",
       label: "Incidencias",
-      value: formatMinutes(personnel.stats.incidentsMinutes),
+      value: formatServiceMinutes(personnel.stats.incidentsMinutes),
       description: "Tiempo confirmado en emergencias",
     },
     {
       key: "operations",
       label: "Operativos",
-      value: formatMinutes(personnel.stats.operationsMinutes),
+      value: formatServiceMinutes(personnel.stats.operationsMinutes),
       description: "Horas confirmadas",
     },
     ...(personnel.hasVolunteerHistory
@@ -136,7 +126,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           {
             key: "volunteer",
             label: "Servicios voluntarios",
-            value: formatMinutes(personnel.stats.volunteerServicesMinutes),
+            value: formatServiceMinutes(personnel.stats.volunteerServicesMinutes),
             description: "Horas confirmadas",
           },
         ]
@@ -144,7 +134,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     {
       key: "total",
       label: "Total acumulado",
-      value: formatMinutes(personnel.stats.totalMinutes),
+      value: formatServiceMinutes(personnel.stats.totalMinutes),
       description: "Históricas + registradas en SIBOR",
     },
   ];
@@ -303,7 +293,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               Horas registradas en SIBOR
             </p>
             <p className="mt-4 text-3xl font-black tracking-tight text-red-900 dark:text-red-200">
-              {formatMinutes(personnel.stats.registeredMinutes)}
+              {formatServiceMinutes(personnel.stats.registeredMinutes)}
             </p>
             <p className="mt-3 text-sm leading-6 text-red-700/80 dark:text-red-300/80">
               Suma de las actividades confirmadas que aplican a tu historial institucional.
