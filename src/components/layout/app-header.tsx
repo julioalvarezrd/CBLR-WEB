@@ -12,6 +12,7 @@ export type AppNavigationItem = {
   label: string;
   href?: string;
   items?: readonly AppNavigationItem[];
+  disabled?: boolean;
 };
 
 export type AppNavigationGroup = {
@@ -102,6 +103,18 @@ function DesktopItem({
   close: () => void;
 }) {
   const [open, setOpen] = useState(false);
+
+  if (item.disabled) {
+    return (
+      <span
+        aria-disabled="true"
+        title="Pendiente de implementación"
+        className="block cursor-not-allowed rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 dark:text-slate-600"
+      >
+        {item.label}
+      </span>
+    );
+  }
 
   if (item.items?.length) {
     return (
@@ -346,7 +359,16 @@ export function AppHeader({ navigation, user }: AppHeaderProps) {
                   {mobileGroups.has(group.label) ? (
                     <div className="ml-3 border-l border-slate-200 pl-4 dark:border-slate-700">
                       {group.items.map((item) =>
-                        item.items?.length ? (
+                        item.disabled ? (
+                          <span
+                            key={item.label}
+                            aria-disabled="true"
+                            title="Pendiente de implementación"
+                            className="block cursor-not-allowed rounded-lg px-3 py-2.5 text-sm text-slate-400 dark:text-slate-600"
+                          >
+                            {item.label}
+                          </span>
+                        ) : item.items?.length ? (
                           <div key={item.label} className="py-1">
                             <button
                               type="button"

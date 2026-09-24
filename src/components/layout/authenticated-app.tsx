@@ -19,6 +19,7 @@ export async function AuthenticatedApp({ children }: AuthenticatedAppProps) {
 
   const securityItems: AppNavigationItem[] = [];
   const administrationItems: AppNavigationItem[] = [];
+  const operationsItems: AppNavigationItem[] = [];
 
   if (context.permissions.has("usuarios.view")) {
     securityItems.push({ label: "Usuarios", href: "/seguridad/usuarios" });
@@ -55,13 +56,43 @@ export async function AuthenticatedApp({ children }: AuthenticatedAppProps) {
     });
   }
 
+  if (context.permissions.has("personal.view")) {
+    operationsItems.push({ label: "Personal", href: "/personal" });
+  }
+
+  operationsItems.push({
+    label: "Servicios de voluntarios",
+    disabled: true,
+  });
+
+  if (context.permissions.has("guardias.view")) {
+    operationsItems.push({
+      label: "Guardias y turnos",
+      href: "/guardias",
+    });
+  }
+
+  operationsItems.push(
+    {
+      label: "Operativos",
+      disabled: true,
+    },
+    {
+      label: "Incidencias",
+      disabled: true,
+    },
+    { label: "Bandeja técnica", disabled: true },
+    {
+      label: "Unidades",
+      disabled: true,
+    },
+    { label: "Reportes", disabled: true },
+  );
+
   const navigation: AppNavigationGroup[] = [
     { label: "Inicio", href: "/inicio" },
-    ...(context.permissions.has("personal.view")
-      ? [{ label: "Personal", href: "/personal" }]
-      : []),
-    ...(context.permissions.has("guardias.view")
-      ? [{ label: "Guardias", href: "/guardias" }]
+    ...(operationsItems.length > 0
+      ? [{ label: "Operaciones", items: operationsItems }]
       : []),
     ...(administrationItems.length > 0
       ? [{ label: "Administración", items: administrationItems }]
