@@ -17,7 +17,7 @@ export default async function PersonnelMovementsPage({
 }: PersonnelMovementsPageProps) {
   await requirePagePermission("personal.edit");
   const [{ memberId }, query] = await Promise.all([params, searchParams]);
-  const { member, ranks, departments, positions } =
+  const { member, ranks, departments, positions, stations } =
     await getPersonnelMovementOptions(memberId);
 
   return (
@@ -51,14 +51,21 @@ export default async function PersonnelMovementsPage({
           rankId: member.rankId,
           departmentId: member.departmentId,
           positionId: member.positionId,
+          stationId: member.stationId,
           rankName: member.rank.name,
           departmentName: member.department?.name ?? null,
           positionName: member.position?.name ?? null,
+          stationName: member.station
+            ? member.station.code + " — " + member.station.name
+            : null,
           typeEffectiveFrom: dateFormatter.format(member.typeHistory[0].effectiveFrom),
           rankEffectiveFrom: dateFormatter.format(member.rankHistory[0].effectiveFrom),
           assignmentEffectiveFrom: dateFormatter.format(
             member.assignmentHistory[0].effectiveFrom,
           ),
+          stationEffectiveFrom: member.stationHistory[0]
+            ? dateFormatter.format(member.stationHistory[0].effectiveFrom)
+            : null,
           statusEffectiveFrom: dateFormatter.format(
             member.statusHistory[0].effectiveFrom,
           ),
@@ -66,6 +73,7 @@ export default async function PersonnelMovementsPage({
         ranks={ranks}
         departments={departments}
         positions={positions}
+        stations={stations}
       />
     </div>
   );

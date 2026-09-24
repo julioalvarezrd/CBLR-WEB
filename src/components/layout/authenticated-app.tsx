@@ -68,7 +68,16 @@ export async function AuthenticatedApp({ children }: AuthenticatedAppProps) {
   return (
     <AppShell
       navigation={navigation}
-      user={{ name: context.user.name, username: context.user.username }}
+      user={{
+        name: context.user.name,
+        username: context.user.username,
+        roleLabel:
+          context.roles.length > 0
+            ? context.roles.map((role) => role.name).join(", ")
+            : "Sin rol asignado",
+        hasPhoto: context.user.hasPhoto,
+        photoVersion: context.user.photoVersion,
+      }}
     >
       {children}
     </AppShell>

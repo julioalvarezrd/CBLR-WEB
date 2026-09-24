@@ -12,6 +12,9 @@ type AppShellProps = {
   user: {
     name: string;
     username: string;
+    roleLabel: string;
+    hasPhoto: boolean;
+    photoVersion: number | null;
   };
 };
 

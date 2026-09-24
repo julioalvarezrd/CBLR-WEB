@@ -17,6 +17,7 @@ import { PersonnelInstitutionalTimeline } from "@/modules/personnel/components/p
 import { PersonnelProfileHeader } from "@/modules/personnel/components/personnel-profile-header";
 import { formatHeightCmForDisplay } from "@/modules/personnel/height";
 import { getPersonnelMember } from "@/modules/personnel/personnel.service";
+import { formatServiceMinutes } from "@/modules/personnel/service-summary";
 
 const dateFormatter = new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" });
 
@@ -107,8 +108,74 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
           <DetailItem label="Rango">{member.rank.name}</DetailItem>
           <DetailItem label="Departamento">{member.department?.name || "Sin asignar"}</DetailItem>
           <DetailItem label="Cargo">{member.position?.name || "Sin asignar"}</DetailItem>
+          {member.personnelType === "FIXED" ? (
+            <DetailItem label="Cuartel">
+              {member.station
+                ? member.station.code + " — " + member.station.name
+                : "Pendiente de asignación"}
+            </DetailItem>
+          ) : null}
           <DetailItem label="Horas históricas">{String(member.historicalHours)}</DetailItem>
         </dl>
+      </ContentPanel>
+
+      <ContentPanel
+        title="Estadísticas de servicio"
+        description="Horas históricas y tiempo confirmado en SIBOR según la trayectoria institucional del miembro."
+      >
+        <div className="grid grid-cols-2 border-t border-slate-200 dark:border-slate-800 md:grid-cols-3 xl:grid-cols-6">
+          <div className="border-b border-r border-slate-200 px-5 py-5 dark:border-slate-800">
+            <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Históricas</p>
+            <p className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+              {formatServiceMinutes(member.serviceSummary.stats.historicalMinutes)}
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Previas al registro detallado en SIBOR</p>
+          </div>
+
+          {member.serviceSummary.hasFixedHistory ? (
+            <div className="border-b border-r border-slate-200 px-5 py-5 dark:border-slate-800">
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Guardias</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+                {formatServiceMinutes(member.serviceSummary.stats.guardsMinutes)}
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Solo períodos como personal fijo</p>
+            </div>
+          ) : null}
+
+          <div className="border-b border-r border-slate-200 px-5 py-5 dark:border-slate-800">
+            <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Incidencias</p>
+            <p className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+              {formatServiceMinutes(member.serviceSummary.stats.incidentsMinutes)}
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Participación confirmada en emergencias</p>
+          </div>
+
+          <div className="border-b border-r border-slate-200 px-5 py-5 dark:border-slate-800">
+            <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Operativos</p>
+            <p className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+              {formatServiceMinutes(member.serviceSummary.stats.operationsMinutes)}
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Horas confirmadas</p>
+          </div>
+
+          {member.serviceSummary.hasVolunteerHistory ? (
+            <div className="border-b border-r border-slate-200 px-5 py-5 dark:border-slate-800">
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Servicios voluntarios</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+                {formatServiceMinutes(member.serviceSummary.stats.volunteerServicesMinutes)}
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Períodos con historial voluntario</p>
+            </div>
+          ) : null}
+
+          <div className="border-b border-r border-slate-200 px-5 py-5 dark:border-slate-800">
+            <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Total acumulado</p>
+            <p className="mt-2 text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+              {formatServiceMinutes(member.serviceSummary.stats.totalMinutes)}
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Históricas + actividades confirmadas</p>
+          </div>
+        </div>
       </ContentPanel>
 
       <ContentPanel title="Datos personales">
@@ -210,6 +277,7 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
           typeHistory={member.typeHistory}
           rankHistory={member.rankHistory}
           assignmentHistory={member.assignmentHistory}
+          stationHistory={member.stationHistory}
           statusHistory={member.statusHistory}
         />
       </ContentPanel>

@@ -11,6 +11,9 @@ export type AuthorizationContext = {
     username: string;
     email: string | null;
     name: string;
+    personnelMemberId: string | null;
+    hasPhoto: boolean;
+    photoVersion: number | null;
   };
   roles: readonly AuthorizationRole[];
   permissions: ReadonlySet<PermissionKey>;

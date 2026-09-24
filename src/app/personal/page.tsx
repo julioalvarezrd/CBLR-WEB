@@ -125,12 +125,13 @@ export default async function PersonnelPage({ searchParams }: PersonnelPageProps
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1040px] text-left text-sm">
+          <table className="w-full min-w-[1160px] text-left text-sm">
             <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-950/50 dark:text-slate-400">
               <tr>
                 <th className="px-6 py-4 font-semibold">Miembro</th>
                 <th className="px-6 py-4 font-semibold">Tipo</th>
                 <th className="px-6 py-4 font-semibold">Rango</th>
+                <th className="px-6 py-4 font-semibold">Cuartel</th>
                 <th className="px-6 py-4 font-semibold">Departamento</th>
                 <th className="px-6 py-4 font-semibold">Cargo</th>
                 <th className="px-6 py-4 font-semibold">Estado</th>
@@ -180,6 +181,18 @@ export default async function PersonnelPage({ searchParams }: PersonnelPageProps
                       {member.rank.name}
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                      {member.personnelType === "FIXED"
+                        ? member.station
+                          ? (
+                              <>
+                                <span className="font-semibold text-slate-700 dark:text-slate-200">{member.station.code}</span>
+                                <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{member.station.name}</p>
+                              </>
+                            )
+                          : "Pendiente"
+                        : "—"}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                       {member.department?.name || "Sin departamento"}
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
@@ -196,7 +209,7 @@ export default async function PersonnelPage({ searchParams }: PersonnelPageProps
 
               {directory.items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-14 text-center text-slate-500 dark:text-slate-400">
+                  <td colSpan={7} className="px-6 py-14 text-center text-slate-500 dark:text-slate-400">
                     No hay miembros que coincidan con los filtros.
                   </td>
                 </tr>

@@ -36,6 +36,7 @@ export default async function NewPersonnelPage({ searchParams }: NewPersonnelPag
         ranks={options.ranks}
         departments={options.departments}
         positions={options.positions}
+        stations={options.stations}
       />
 
       <noscript>

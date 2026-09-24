@@ -21,11 +21,13 @@ import { createPersonnelMemberAction } from "@/modules/personnel/personnel.actio
 type RankOption = { id: string; name: string; category: string; hierarchy: number };
 type DepartmentOption = { id: string; name: string };
 type PositionOption = { id: string; name: string; departmentId: string | null };
+type StationOption = { id: string; code: string; name: string; type: "HEADQUARTERS" | "SUBSTATION" };
 
 type PersonnelFormProps = {
   ranks: RankOption[];
   departments: DepartmentOption[];
   positions: PositionOption[];
+  stations: StationOption[];
 };
 
 const inputClassName =
@@ -147,7 +149,7 @@ type RecommenderResult = {
   status: "ACTIVE" | "INACTIVE";
 };
 
-export function PersonnelForm({ ranks, departments, positions }: PersonnelFormProps) {
+export function PersonnelForm({ ranks, departments, positions, stations }: PersonnelFormProps) {
   const [personnelType, setPersonnelType] = useState<PersonnelTypeValue>("VOLUNTEER");
   const [departmentId, setDepartmentId] = useState("");
   const [worksCurrently, setWorksCurrently] = useState(false);
@@ -270,6 +272,21 @@ export function PersonnelForm({ ranks, departments, positions }: PersonnelFormPr
               ))}
             </select>
           </div>
+
+          {personnelType === "FIXED" ? (
+            <div>
+              <label htmlFor="stationId" className={labelClassName}>Cuartel</label>
+              <select id="stationId" name="stationId" required defaultValue="" className={inputClassName}>
+                <option value="" disabled>Selecciona un cuartel</option>
+                {stations.map((station) => (
+                  <option key={station.id} value={station.id}>
+                    {station.code} — {station.name}
+                  </option>
+                ))}
+              </select>
+              <p className={hintClassName}>La asignación de cuartel aplica únicamente al personal fijo.</p>
+            </div>
+          ) : null}
 
           <div>
             <label htmlFor="historicalHours" className={labelClassName}>Horas históricas conocidas</label>
