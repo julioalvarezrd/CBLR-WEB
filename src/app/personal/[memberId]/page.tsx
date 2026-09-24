@@ -13,7 +13,9 @@ import {
   PERSONNEL_TYPE_LABELS,
   SEX_LABELS,
 } from "@/modules/personnel/constants";
+import { PersonnelInstitutionalTimeline } from "@/modules/personnel/components/personnel-institutional-timeline";
 import { PersonnelProfileHeader } from "@/modules/personnel/components/personnel-profile-header";
+import { formatHeightCmForDisplay } from "@/modules/personnel/height";
 import { getPersonnelMember } from "@/modules/personnel/personnel.service";
 
 const dateFormatter = new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" });
@@ -46,7 +48,7 @@ function ValuesList({ values }: { values: string[] }) {
 
 type PersonnelDetailPageProps = {
   params: Promise<{ memberId: string }>;
-  searchParams: Promise<{ saved?: string; updated?: string }>;
+  searchParams: Promise<{ saved?: string; updated?: string; movement?: string }>;
 };
 
 export default async function PersonnelDetailPage({ params, searchParams }: PersonnelDetailPageProps) {
@@ -73,6 +75,12 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
         photoVersion={member.updatedAt.getTime()}
         canEdit={canEdit}
       />
+
+      {query.movement ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
+          Movimiento institucional registrado correctamente. El historial anterior fue cerrado y el nuevo movimiento quedó vigente.
+        </div>
+      ) : null}
 
       {query.updated === "1" ? (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
@@ -114,7 +122,7 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
           <DetailItem label="Estado civil">{member.maritalStatus ? MARITAL_STATUS_LABELS[member.maritalStatus] : "No registrado"}</DetailItem>
           <DetailItem label="Nacionalidad">{member.nationality}</DetailItem>
           <DetailItem label="Lugar de nacimiento">{member.birthplace || "No registrado"}</DetailItem>
-          <DetailItem label="Estatura">{member.heightCm ? String(member.heightCm) + " cm" : "No registrado"}</DetailItem>
+          <DetailItem label="Estatura">{formatHeightCmForDisplay(member.heightCm ? String(member.heightCm) : null)}</DetailItem>
         </dl>
       </ContentPanel>
 
@@ -193,42 +201,17 @@ export default async function PersonnelDetailPage({ params, searchParams }: Pers
         </dl>
       </ContentPanel>
 
-      <ContentPanel title="Historial institucional inicial" description="Estos registros se crean automáticamente al registrar al miembro.">
-        <div className="grid gap-6 p-5 lg:grid-cols-3 sm:p-6">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Tipo de personal</h3>
-            <div className="mt-3 space-y-2">
-              {member.typeHistory.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">{PERSONNEL_TYPE_LABELS[entry.personnelType]}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Desde {formatDate(entry.effectiveFrom)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Rango</h3>
-            <div className="mt-3 space-y-2">
-              {member.rankHistory.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">{entry.rank.name}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Desde {formatDate(entry.effectiveFrom)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Departamento / cargo</h3>
-            <div className="mt-3 space-y-2">
-              {member.assignmentHistory.map((entry) => (
-                <div key={entry.id} className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-                  <p className="font-semibold text-slate-800 dark:text-slate-200">{entry.department?.name || "Sin departamento"}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{entry.position?.name || "Sin cargo"} · Desde {formatDate(entry.effectiveFrom)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      <ContentPanel
+        title="Historial institucional"
+        description="Línea de tiempo consolidada de la trayectoria institucional del miembro."
+      >
+        <PersonnelInstitutionalTimeline
+          admissionDate={member.admissionDate}
+          typeHistory={member.typeHistory}
+          rankHistory={member.rankHistory}
+          assignmentHistory={member.assignmentHistory}
+          statusHistory={member.statusHistory}
+        />
       </ContentPanel>
     </div>
   );

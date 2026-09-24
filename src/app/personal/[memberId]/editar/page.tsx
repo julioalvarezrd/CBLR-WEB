@@ -5,6 +5,7 @@ import {
   PersonnelEditForm,
   type PersonnelEditValues,
 } from "@/modules/personnel/components/personnel-edit-form";
+import { formatHeightCmAsInput } from "@/modules/personnel/height";
 import { getPersonnelMemberForEdit } from "@/modules/personnel/personnel.service";
 
 type EditPersonnelPageProps = {
@@ -42,7 +43,7 @@ export default async function EditPersonnelPage({ params, searchParams }: EditPe
     maritalStatus: member.maritalStatus ?? "",
     nationality: member.nationality,
     birthplace: textValue(member.birthplace),
-    heightCm: member.heightCm ? String(member.heightCm) : "",
+    heightCm: formatHeightCmAsInput(member.heightCm ? String(member.heightCm) : null),
     phone: textValue(member.phone),
     email: textValue(member.email),
     address: textValue(member.address),
