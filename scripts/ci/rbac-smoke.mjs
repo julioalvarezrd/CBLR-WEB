@@ -43,8 +43,8 @@ try {
   );
 
   await client.query(
-    'INSERT INTO "User" ("id", "email", "name", "passwordHash", "isActive", "updatedAt") VALUES ($1, $2, $3, $4, true, CURRENT_TIMESTAMP)',
-    [userId, userId + "@example.invalid", "CI User", "not-used-in-smoke-test"],
+    'INSERT INTO "User" ("id", "username", "email", "name", "passwordHash", "isActive", "updatedAt") VALUES ($1, $2, $3, $4, $5, true, CURRENT_TIMESTAMP)',
+    [userId, userId, userId + "@example.invalid", "CI User", "not-used-in-smoke-test"],
   );
 
   await client.query(

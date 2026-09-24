@@ -3,7 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/modules/auth/password";
-import { normalizeEmail } from "@/modules/auth/validations";
+import { normalizeUsername } from "@/modules/auth/validations";
 
 export const authConfig = {
   pages: {
@@ -13,9 +13,9 @@ export const authConfig = {
     Credentials({
       name: "Credenciales institucionales",
       credentials: {
-        email: {
-          label: "Correo electrónico",
-          type: "email",
+        username: {
+          label: "Usuario",
+          type: "text",
         },
         password: {
           label: "Contraseña",
@@ -23,31 +23,38 @@ export const authConfig = {
         },
       },
       async authorize(credentials) {
-        const emailValue =
-          typeof credentials.email === "string" ? credentials.email : "";
+        const usernameValue =
+          typeof credentials.username === "string" ? credentials.username : "";
         const password =
           typeof credentials.password === "string" ? credentials.password : "";
 
-        if (!emailValue || !password) {
+        if (!usernameValue || !password) {
           return null;
         }
 
-        let email: string;
+        let username: string;
 
         try {
-          email = normalizeEmail(emailValue);
+          username = normalizeUsername(usernameValue);
         } catch {
           return null;
         }
 
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { username },
           select: {
             id: true,
+            username: true,
             email: true,
             name: true,
             passwordHash: true,
             isActive: true,
+            personnelMember: {
+              select: {
+                firstNames: true,
+                lastNames: true,
+              },
+            },
           },
         });
 
@@ -79,7 +86,9 @@ export const authConfig = {
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: user.personnelMember
+            ? `${user.personnelMember.firstNames} ${user.personnelMember.lastNames}`
+            : user.name,
         };
       },
     }),

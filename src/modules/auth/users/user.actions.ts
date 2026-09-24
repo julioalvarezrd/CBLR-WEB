@@ -19,9 +19,12 @@ export async function createUserAction(formData: FormData): Promise<void> {
 
   try {
     const user = await createUser({
+      mode: getText(formData, "mode"),
+      username: getText(formData, "username"),
       name: getText(formData, "name"),
       email: getText(formData, "email"),
       password: getText(formData, "password"),
+      personnelCode: getText(formData, "personnelCode"),
       roleIds: formData
         .getAll("roles")
         .filter((value): value is string => typeof value === "string"),

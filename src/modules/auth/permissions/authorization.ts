@@ -23,9 +23,17 @@ export async function getAuthorizationContext(): Promise<AuthorizationContext | 
     where: { id: userId },
     select: {
       id: true,
+      username: true,
       email: true,
       name: true,
       isActive: true,
+      personnelMember: {
+        select: {
+          institutionalCode: true,
+          firstNames: true,
+          lastNames: true,
+        },
+      },
       roles: {
         select: {
           role: {
@@ -66,8 +74,11 @@ export async function getAuthorizationContext(): Promise<AuthorizationContext | 
   return {
     user: {
       id: user.id,
+      username: user.personnelMember?.institutionalCode ?? user.username,
       email: user.email,
-      name: user.name,
+      name: user.personnelMember
+        ? `${user.personnelMember.firstNames} ${user.personnelMember.lastNames}`
+        : user.name,
     },
     roles: activeRoles.map((role) => ({
       id: role.id,

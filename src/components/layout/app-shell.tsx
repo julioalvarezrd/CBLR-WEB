@@ -11,7 +11,7 @@ type AppShellProps = {
   navigation: readonly AppNavigationGroup[];
   user: {
     name: string;
-    email: string;
+    username: string;
   };
 };
 

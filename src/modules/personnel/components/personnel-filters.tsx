@@ -35,6 +35,7 @@ export function PersonnelFilters({
 
       if (normalized) params.set("q", normalized);
       else params.delete("q");
+      params.delete("page");
 
       const nextSearch = params.toString();
       const nextHref = nextSearch ? `${pathname}?${nextSearch}` : pathname;
@@ -52,6 +53,7 @@ export function PersonnelFilters({
     const params = new URLSearchParams(currentSearch);
     if (value === defaultValue) params.delete(key);
     else params.set(key, value);
+    params.delete("page");
 
     const nextSearch = params.toString();
     if (nextSearch === currentSearch) return;
@@ -60,15 +62,15 @@ export function PersonnelFilters({
   }
 
   return (
-    <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:grid-cols-[1fr_12rem_12rem]">
+    <div className="grid gap-3 p-5 sm:p-6 lg:grid-cols-[minmax(18rem,1fr)_15rem_12rem]">
       <label>
         <span className="sr-only">Buscar personal</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar por código, nombre, apellido o documento..."
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-4 focus:ring-red-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-red-950/40"
+          placeholder="Buscar por nombre, código, cédula o teléfono..."
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-red-400 focus:ring-4 focus:ring-red-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-red-950/40"
         />
       </label>
 
@@ -77,7 +79,7 @@ export function PersonnelFilters({
         <select
           defaultValue={initialType}
           onChange={(event) => updateFilter("type", event.target.value, "all")}
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
         >
           <option value="all">Todos los tipos</option>
           <option value="volunteer">Voluntarios</option>
@@ -90,7 +92,7 @@ export function PersonnelFilters({
         <select
           defaultValue={initialStatus}
           onChange={(event) => updateFilter("status", event.target.value, "active")}
-          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+          className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
         >
           <option value="active">Activos</option>
           <option value="inactive">Inactivos</option>

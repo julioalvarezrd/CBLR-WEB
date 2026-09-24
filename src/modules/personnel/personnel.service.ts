@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { writeAudit } from "@/modules/auth/audit.service";
 import { ConflictError, ValidationError } from "@/modules/auth/errors";
 import { requirePermission } from "@/modules/auth/permissions/authorization";
+import { resolvePagination, type PaginationInput } from "@/lib/pagination";
 import {
   normalizePersonnelInput,
   type CreatePersonnelInput,
@@ -501,30 +502,36 @@ export async function listPersonnel(
     query?: string;
     status?: PersonnelStatusFilter;
     type?: PersonnelTypeFilter;
-  } = {},
+  } & PaginationInput = {},
 ) {
   await requirePermission("personal.view");
   const query = filters.query?.trim() ?? "";
   const status = filters.status ?? "active";
   const type = filters.type ?? "all";
+  const where = {
+    ...(status === "all" ? {} : { status: status === "active" ? ("ACTIVE" as const) : ("INACTIVE" as const) }),
+    ...(type === "all"
+      ? {}
+      : { personnelType: type === "volunteer" ? ("VOLUNTEER" as const) : ("FIXED" as const) }),
+    ...(query
+      ? {
+          OR: [
+            { institutionalCode: { contains: query, mode: "insensitive" as const } },
+            { firstNames: { contains: query, mode: "insensitive" as const } },
+            { lastNames: { contains: query, mode: "insensitive" as const } },
+            { documentNumber: { contains: query, mode: "insensitive" as const } },
+            { phone: { contains: query, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
 
-  return prisma.personnelMember.findMany({
-    where: {
-      ...(status === "all" ? {} : { status: status === "active" ? "ACTIVE" : "INACTIVE" }),
-      ...(type === "all"
-        ? {}
-        : { personnelType: type === "volunteer" ? "VOLUNTEER" : "FIXED" }),
-      ...(query
-        ? {
-            OR: [
-              { institutionalCode: { contains: query, mode: "insensitive" } },
-              { firstNames: { contains: query, mode: "insensitive" } },
-              { lastNames: { contains: query, mode: "insensitive" } },
-              { documentNumber: { contains: query, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
+  const total = await prisma.personnelMember.count({ where });
+  const pagination = resolvePagination(total, filters);
+  const items = await prisma.personnelMember.findMany({
+    where,
+    skip: (pagination.page - 1) * pagination.pageSize,
+    take: pagination.pageSize,
     orderBy: [{ lastNames: "asc" }, { firstNames: "asc" }],
     select: {
       id: true,
@@ -533,12 +540,14 @@ export async function listPersonnel(
       lastNames: true,
       personnelType: true,
       status: true,
-      admissionDate: true,
+      photoMimeType: true,
       rank: { select: { name: true } },
       department: { select: { name: true } },
       position: { select: { name: true } },
     },
   });
+
+  return { items, ...pagination };
 }
 
 export async function getPersonnelCounts() {

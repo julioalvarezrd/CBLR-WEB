@@ -11,6 +11,7 @@ import {
 import type { PermissionKey } from "@/modules/auth/permissions/catalog";
 import { syncPermissionCatalog } from "@/modules/auth/permissions/catalog.service";
 import { assertSecurityAdministratorRemains } from "@/modules/auth/security-guards";
+import { resolvePagination, type PaginationInput } from "@/lib/pagination";
 import {
   normalizeRoleName,
   normalizeRoleNameKey,
@@ -42,10 +43,14 @@ async function getRolePermissions(roleId: string): Promise<PermissionKey[]> {
   );
 }
 
-export async function listRoles() {
+export async function listRoles(paginationInput: PaginationInput = {}) {
   await requirePermission("roles.view");
 
-  return prisma.role.findMany({
+  const total = await prisma.role.count();
+  const pagination = resolvePagination(total, paginationInput);
+  const items = await prisma.role.findMany({
+    skip: (pagination.page - 1) * pagination.pageSize,
+    take: pagination.pageSize,
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -58,6 +63,25 @@ export async function listRoles() {
       },
     },
   });
+
+  return { items, ...pagination };
+}
+
+export async function getRoleCounts() {
+  await requirePermission("roles.view");
+
+  const [total, active, assignments] = await prisma.$transaction([
+    prisma.role.count(),
+    prisma.role.count({ where: { isActive: true } }),
+    prisma.userRole.count(),
+  ]);
+
+  return {
+    total,
+    active,
+    inactive: total - active,
+    assignments,
+  };
 }
 
 export async function getRole(roleId: string) {

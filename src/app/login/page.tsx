@@ -39,7 +39,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           {params.error ? <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">No fue posible iniciar sesión. Verifica tus credenciales y el estado de tu usuario.</div> : null}
 
           <form action={loginAction} className="mt-8 space-y-5">
-            <div><label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-200">Correo electrónico</label><input id="email" name="email" type="email" autoComplete="username" required className={inputClassName} /></div>
+            <div>
+              <label htmlFor="username" className="text-sm font-medium text-slate-700 dark:text-slate-200">Usuario</label>
+              <input id="username" name="username" type="text" autoComplete="username" placeholder="Ej. 25-CBLR-001" required className={inputClassName} />
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Si tu cuenta está vinculada a Personal, utiliza tu código institucional.</p>
+            </div>
             <div><label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-200">Contraseña</label><input id="password" name="password" type="password" autoComplete="current-password" required className={inputClassName} /></div>
             <button type="submit" className="w-full rounded-lg bg-red-700 px-4 py-2.5 font-medium text-white hover:bg-red-800">Iniciar sesión</button>
           </form>

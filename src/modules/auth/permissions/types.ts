@@ -8,7 +8,8 @@ export type AuthorizationRole = {
 export type AuthorizationContext = {
   user: {
     id: string;
-    email: string;
+    username: string;
+    email: string | null;
     name: string;
   };
   roles: readonly AuthorizationRole[];

@@ -9,6 +9,7 @@ import {
   normalizeEmail,
   normalizeName,
   normalizeRoleNameKey,
+  normalizeUsername,
   validatePassword,
 } from "@/modules/auth/validations";
 import { syncInitialInstitutionalCatalog } from "@/modules/institutional-catalog/bootstrap.service";
@@ -20,11 +21,13 @@ export async function canRunInitialSetup(): Promise<boolean> {
 }
 
 export async function initializeSecurity(input: {
+  username: string;
   name: string;
   email: string;
   password: string;
   passwordConfirmation: string;
 }): Promise<void> {
+  const username = normalizeUsername(input.username);
   const name = normalizeName(input.name);
   const email = normalizeEmail(input.email);
   const password = validatePassword(input.password);
@@ -54,8 +57,8 @@ export async function initializeSecurity(input: {
       });
 
       const user = await tx.user.create({
-        data: { name, email, passwordHash },
-        select: { id: true, name: true, email: true },
+        data: { username, name, email, passwordHash },
+        select: { id: true, username: true, name: true, email: true },
       });
 
       await tx.userRole.create({ data: { userId: user.id, roleId: role.id, assignedById: user.id } });
@@ -67,7 +70,7 @@ export async function initializeSecurity(input: {
         action: "security.initialized",
         entityType: "User",
         entityId: user.id,
-        after: { email: user.email, roleId: role.id, roleName: role.name, permissionKeys: PERMISSIONS.map((permission) => permission.key) },
+        after: { username: user.username, email: user.email, roleId: role.id, roleName: role.name, permissionKeys: PERMISSIONS.map((permission) => permission.key) },
       });
     },
     { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
