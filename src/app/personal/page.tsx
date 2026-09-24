@@ -190,7 +190,7 @@ export default async function PersonnelPage({ searchParams }: PersonnelPageProps
                               </>
                             )
                           : "Pendiente"
-                        : "No aplica"}
+                        : "—"}
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                       {member.department?.name || "Sin departamento"}
