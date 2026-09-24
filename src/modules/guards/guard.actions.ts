@@ -23,9 +23,18 @@ function guardError(guardId: string, error: unknown): never {
   );
 }
 
-export async function createGuardAction(formData: FormData): Promise<void> {
+export type CreateGuardFormState = {
+  error: string | null;
+};
+
+export async function createGuardAction(
+  _previousState: CreateGuardFormState,
+  formData: FormData,
+): Promise<CreateGuardFormState> {
+  let guard: Awaited<ReturnType<typeof createGuard>>;
+
   try {
-    const guard = await createGuard({
+    guard = await createGuard({
       stationId: text(formData, "stationId"),
       startsAt: text(formData, "startsAt"),
       endsAt: text(formData, "endsAt"),
@@ -33,13 +42,11 @@ export async function createGuardAction(formData: FormData): Promise<void> {
       memberCodes: text(formData, "memberCodes"),
       notes: text(formData, "notes"),
     });
-
-    redirect(`/guardias/${guard.id}?created=1`);
   } catch (error) {
-    redirect(
-      `/guardias/nueva?error=${encodeURIComponent(getActionErrorMessage(error))}`,
-    );
+    return { error: getActionErrorMessage(error) };
   }
+
+  redirect(`/guardias/${guard.id}?created=1`);
 }
 
 export async function updateGuardPlanAction(formData: FormData): Promise<void> {

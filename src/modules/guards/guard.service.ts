@@ -320,6 +320,39 @@ export async function syncGuardStatuses(now = new Date()): Promise<void> {
   });
 }
 
+export async function getGuardPersonnelCandidate(institutionalCode: string) {
+  await requirePermission("guardias.create");
+  const code = normalizeCode(institutionalCode);
+
+  if (!code) {
+    throw new ValidationError("Debes indicar un código institucional.");
+  }
+
+  const member = await prisma.personnelMember.findUnique({
+    where: { institutionalCode: code },
+    select: {
+      id: true,
+      institutionalCode: true,
+      firstNames: true,
+      lastNames: true,
+      personnelType: true,
+      status: true,
+      rank: { select: { name: true } },
+      station: { select: { code: true, name: true } },
+    },
+  });
+
+  if (!member) {
+    throw new ValidationError("No se encontró un miembro con ese código institucional.");
+  }
+
+  if (member.personnelType !== "FIXED" || member.status !== "ACTIVE") {
+    throw new ValidationError("El miembro indicado no está disponible para ser asignado a una guardia.");
+  }
+
+  return member;
+}
+
 export async function getGuardFormOptions() {
   await requirePermission("guardias.create");
   return prisma.station.findMany({
