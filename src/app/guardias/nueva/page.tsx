@@ -1,5 +1,3 @@
-import { BackLink } from "@/components/ui/back-link";
-import { ContentPanel } from "@/components/ui/content-panel";
 import { ModuleHeader } from "@/components/ui/module-header";
 import { requirePagePermission } from "@/modules/auth/permissions/page-authorization";
 import { GuardCreateForm } from "@/modules/guards/components/guard-create-form";
@@ -11,20 +9,13 @@ export default async function NewGuardPage() {
 
   return (
     <div className="space-y-6">
-      <BackLink href="/guardias">Volver a Guardias</BackLink>
-
       <ModuleHeader
-        eyebrow="Guardias"
+        eyebrow="Operación diaria"
         title="Nueva guardia"
-        description="Planifica el turno, selecciona el responsable y agrega los miembros uno a uno por código institucional."
+        description="Define el horario y cuartel, selecciona el responsable y agrega el personal en servicio."
       />
 
-      <ContentPanel
-        title="Planificación"
-        description="Si algún dato necesita corrección, el formulario conservará la información ingresada."
-      >
-        <GuardCreateForm stations={stations} />
-      </ContentPanel>
+      <GuardCreateForm stations={stations} />
     </div>
   );
 }
