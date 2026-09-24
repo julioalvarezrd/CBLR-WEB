@@ -514,62 +514,108 @@ export async function listGuards(
   const total = await prisma.guard.count({ where });
   const pagination = resolvePagination(total, filters);
 
-  const [items, stations, guardCount, attendanceCount, absenceCount, hours] =
-    await Promise.all([
-      prisma.guard.findMany({
-        where,
-        skip: (pagination.page - 1) * pagination.pageSize,
-        take: pagination.pageSize,
-        orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
-        select: {
-          id: true,
-          startsAt: true,
-          endsAt: true,
-          status: true,
-          station: { select: { code: true, name: true } },
-          responsibleMember: {
-            select: {
-              institutionalCode: true,
-              firstNames: true,
-              lastNames: true,
+  const [
+    rawItems,
+    stations,
+    guardCount,
+    plannedCount,
+    activeCount,
+    finishedCount,
+    absenceCount,
+    finishedAssignments,
+    closedFinishedAssignments,
+    hours,
+    confirmedAssignments,
+  ] = await Promise.all([
+    prisma.guard.findMany({
+      where,
+      skip: (pagination.page - 1) * pagination.pageSize,
+      take: pagination.pageSize,
+      orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        startsAt: true,
+        endsAt: true,
+        status: true,
+        station: { select: { code: true, name: true } },
+        responsibleMember: {
+          select: {
+            institutionalCode: true,
+            firstNames: true,
+            lastNames: true,
+          },
+        },
+        assignments: {
+          select: {
+            hourEntry: { select: { minutes: true } },
+          },
+        },
+        _count: { select: { assignments: true } },
+      },
+    }),
+    prisma.station.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, code: true, name: true },
+    }),
+    prisma.guard.count({ where: statsWhere }),
+    prisma.guard.count({ where: { AND: [statsWhere, { status: "PLANNED" }] } }),
+    prisma.guard.count({ where: { AND: [statsWhere, { status: "ACTIVE" }] } }),
+    prisma.guard.count({ where: { AND: [statsWhere, { status: "FINISHED" }] } }),
+    prisma.guardAssignment.count({
+      where: {
+        guard: { is: statsWhere },
+        attendanceStatus: "ABSENT",
+      },
+    }),
+    prisma.guardAssignment.count({
+      where: {
+        guard: { is: { AND: [statsWhere, { status: "FINISHED" }] } },
+      },
+    }),
+    prisma.guardAssignment.count({
+      where: {
+        guard: { is: { AND: [statsWhere, { status: "FINISHED" }] } },
+        attendanceStatus: { not: "PENDING" },
+      },
+    }),
+    prisma.personnelHourEntry.aggregate({
+      where: {
+        category: "GUARD",
+        guardAssignment: {
+          is: {
+            guard: {
+              is: statsWhere,
             },
           },
-          _count: { select: { assignments: true } },
         },
-      }),
-      prisma.station.findMany({
-        where: { isActive: true },
-        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-        select: { id: true, code: true, name: true },
-      }),
-      prisma.guard.count({ where: statsWhere }),
-      prisma.guardAssignment.count({
-        where: {
-          guard: { is: statsWhere },
-          attendanceStatus: { in: ["PRESENT", "PARTIAL"] },
-        },
-      }),
-      prisma.guardAssignment.count({
-        where: {
-          guard: { is: statsWhere },
-          attendanceStatus: "ABSENT",
-        },
-      }),
-      prisma.personnelHourEntry.aggregate({
-        where: {
-          category: "GUARD",
-          guardAssignment: {
-            is: {
-              guard: {
-                is: statsWhere,
-              },
+        confirmedAt: { not: null },
+      },
+      _sum: { minutes: true },
+    }),
+    prisma.personnelHourEntry.count({
+      where: {
+        category: "GUARD",
+        guardAssignment: {
+          is: {
+            guard: {
+              is: statsWhere,
             },
           },
-          confirmedAt: { not: null },
         },
-        _sum: { minutes: true },
-      }),
-    ]);
+        confirmedAt: { not: null },
+      },
+    }),
+  ]);
+
+  const items = rawItems.map(({ assignments, ...guard }) => ({
+    ...guard,
+    confirmedMinutes: assignments.reduce(
+      (totalMinutes, assignment) =>
+        totalMinutes + (assignment.hourEntry?.minutes ?? 0),
+      0,
+    ),
+  }));
 
   return {
     items,
@@ -577,9 +623,17 @@ export async function listGuards(
     month: range.month,
     stats: {
       guards: guardCount,
-      attendance: attendanceCount,
+      planned: plannedCount,
+      active: activeCount,
+      pending: plannedCount + activeCount,
+      finished: finishedCount,
+      attendanceClosedPercent:
+        finishedAssignments > 0
+          ? Math.round((closedFinishedAssignments / finishedAssignments) * 100)
+          : 0,
       absences: absenceCount,
       confirmedMinutes: hours._sum.minutes ?? 0,
+      confirmedAssignments,
     },
     ...pagination,
   };

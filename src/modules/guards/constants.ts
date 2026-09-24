@@ -69,3 +69,24 @@ export function formatGuardDateTimeInput(value: Date): string {
 
   return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
 }
+
+export function formatGuardMonth(month: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(month);
+  if (!match) return month;
+
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, 1);
+  const formatted = new Intl.DateTimeFormat("es-DO", {
+    month: "long",
+    year: "numeric",
+  }).format(date);
+
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
+
+export function shiftGuardMonth(month: string, delta: number): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(month);
+  if (!match) return currentInstitutionalMonth();
+
+  const date = new Date(Number(match[1]), Number(match[2]) - 1 + delta, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}

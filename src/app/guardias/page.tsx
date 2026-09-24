@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { ContentPanel } from "@/components/ui/content-panel";
 import { DatabasePagination } from "@/components/ui/database-pagination";
 import { ModuleHeader } from "@/components/ui/module-header";
 import { NavigableTableRow } from "@/components/ui/navigable-table-row";
@@ -13,7 +12,7 @@ import {
   GUARD_STATUS_LABELS,
   type GuardStatusValue,
 } from "@/modules/guards/constants";
-import { GuardFilters } from "@/modules/guards/components/guard-filters";
+import { GuardPeriodControls } from "@/modules/guards/components/guard-period-controls";
 import {
   listGuards,
   type GuardListStatusFilter,
@@ -70,14 +69,14 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
   return (
     <div className="space-y-6">
       <ModuleHeader
-        eyebrow="Operaciones"
-        title="Guardias"
-        description="Planificación, asistencia y horas confirmadas del personal fijo por cuartel."
+        eyebrow="Operación diaria"
+        title="Guardias y turnos"
+        description="Planificación mensual del personal de servicio por cuartel, seguimiento de asistencia y horas confirmadas."
         action={
           canCreate ? (
             <Link
               href="/guardias/nueva"
-              className="inline-flex w-full items-center justify-center rounded-xl bg-red-700 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-red-800 sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-xl bg-red-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-red-800 sm:w-auto"
             >
               Nueva guardia
             </Link>
@@ -85,58 +84,59 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
         }
         stats={[
           {
-            label: "Guardias",
+            label: "Guardias del mes",
             value: directory.stats.guards,
-            description: "En el mes seleccionado",
+            description: directory.month,
           },
           {
-            label: "Asistencias",
-            value: directory.stats.attendance,
-            description: "Presentes o parciales",
+            label: "Por atender",
+            value: directory.stats.pending,
+            description:
+              String(directory.stats.planned) +
+              " planificadas · " +
+              String(directory.stats.active) +
+              " activas",
           },
           {
-            label: "Ausencias",
-            value: directory.stats.absences,
-            description: "Ausencias registradas",
+            label: "Finalizadas",
+            value: directory.stats.finished,
+            description:
+              String(directory.stats.attendanceClosedPercent) +
+              "% asistencia cerrada",
           },
           {
             label: "Horas confirmadas",
             value: formatServiceMinutes(directory.stats.confirmedMinutes),
-            description: "Acreditadas a expedientes",
+            description:
+              String(directory.stats.confirmedAssignments) + " asignaciones",
+          },
+          {
+            label: "Ausencias",
+            value: directory.stats.absences,
+            description: "Registradas en el período",
           },
         ]}
       />
 
-      <ContentPanel
-        title="Vista mensual"
-        description="Busca y filtra guardias por mes, cuartel, estado, responsable o miembro."
-      >
-        <GuardFilters
-          initialMonth={directory.month}
-          initialStationId={stationId}
-          initialStatus={status}
-          initialQuery={query}
-          stations={directory.stations}
-        />
-      </ContentPanel>
+      <GuardPeriodControls
+        month={directory.month}
+        stationId={stationId}
+        status={status}
+        query={query}
+        stations={directory.stations}
+      />
 
-      <ContentPanel
-        title="Guardias registradas"
-        description="Abre una guardia para administrar asistencia, horarios reales y reemplazos."
-        trailing={
-          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-            {directory.total} {directory.total === 1 ? "resultado" : "resultados"}
-          </span>
-        }
-      >
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-left text-sm">
+          <table className="w-full min-w-[1080px] text-left text-sm">
             <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-950/50 dark:text-slate-400">
               <tr>
-                <th className="px-6 py-4 font-semibold">Horario</th>
+                <th className="px-6 py-4 font-semibold">Inicio</th>
+                <th className="px-6 py-4 font-semibold">Fin</th>
                 <th className="px-6 py-4 font-semibold">Cuartel</th>
                 <th className="px-6 py-4 font-semibold">Responsable</th>
                 <th className="px-6 py-4 font-semibold">Personal</th>
+                <th className="px-6 py-4 font-semibold">Horas</th>
                 <th className="px-6 py-4 font-semibold">Estado</th>
               </tr>
             </thead>
@@ -148,38 +148,33 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
                     <td className="px-6 py-4">
                       <Link
                         href={href}
-                        className="font-bold text-slate-950 hover:text-red-700 dark:text-slate-100 dark:hover:text-red-400"
+                        className="font-semibold text-slate-800 hover:text-red-700 dark:text-slate-200 dark:hover:text-red-400"
                       >
                         {formatGuardDateTime(guard.startsAt)}
                       </Link>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        hasta {formatGuardDateTime(guard.endsAt)}
-                      </p>
                     </td>
-                    <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-800 dark:text-slate-200">
-                        {guard.station.code}
-                      </p>
-                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                        {guard.station.name}
-                      </p>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                      {formatGuardDateTime(guard.endsAt)}
+                    </td>
+                    <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
+                      <span className="font-semibold">{guard.station.code}</span>
+                      {" — "}
+                      {guard.station.name}
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                       {guard.responsibleMember
-                        ? (
-                            <>
-                              <span className="font-medium text-slate-800 dark:text-slate-200">
-                                {guard.responsibleMember.firstNames} {guard.responsibleMember.lastNames}
-                              </span>
-                              <p className="mt-0.5 font-mono text-xs text-slate-400">
-                                {guard.responsibleMember.institutionalCode}
-                              </p>
-                            </>
-                          )
+                        ? guard.responsibleMember.firstNames +
+                          " " +
+                          guard.responsibleMember.lastNames
                         : "Sin responsable"}
                     </td>
                     <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
                       {guard._count.assignments}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                      {guard.confirmedMinutes > 0
+                        ? formatServiceMinutes(guard.confirmedMinutes)
+                        : "—"}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge tone={statusTone(guard.status)}>
@@ -192,8 +187,8 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
 
               {directory.items.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-14 text-center text-slate-500 dark:text-slate-400">
-                    No hay guardias que coincidan con los filtros.
+                  <td colSpan={7} className="px-6 py-14 text-center text-slate-500 dark:text-slate-400">
+                    No hay guardias que coincidan con el período y filtros seleccionados.
                   </td>
                 </tr>
               ) : null}
@@ -202,7 +197,7 @@ export default async function GuardsPage({ searchParams }: GuardsPageProps) {
         </div>
 
         <DatabasePagination {...directory} />
-      </ContentPanel>
+      </section>
     </div>
   );
 }

@@ -15,7 +15,9 @@ type ModuleHeaderProps = {
 };
 
 function getStatsGridClass(count: number): string {
-  if (count >= 4) return "sm:grid-cols-2 xl:grid-cols-4";
+  if (count >= 6) return "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6";
+  if (count === 5) return "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5";
+  if (count === 4) return "sm:grid-cols-2 xl:grid-cols-4";
   if (count === 3) return "sm:grid-cols-3";
   if (count === 2) return "sm:grid-cols-2";
   return "grid-cols-1";
