@@ -67,6 +67,21 @@ enum PersonnelHourCategory {
   VOLUNTEER_SERVICE
 }
 
+enum GuardStatus {
+  PLANNED
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+enum GuardAttendanceStatus {
+  PENDING
+  PRESENT
+  ABSENT
+  PARTIAL
+  REPLACED
+}
+
 model User {
   id                String   @id @default(cuid())
   username          String   @unique
@@ -84,7 +99,8 @@ model User {
   permissionAssignments RolePermission[] @relation("RolePermissionAssignedBy")
   auditLogs             AuditLog[]       @relation("AuditActor")
   personnelCreated      PersonnelMember[] @relation("PersonnelMemberCreatedBy")
-  personnelMember       PersonnelMember?   @relation("UserPersonnelMember", fields: [personnelMemberId], references: [id], onDelete: SetNull)
+  guardsCreated         Guard[]           @relation("GuardCreatedBy")
+  personnelMember       PersonnelMember?  @relation("UserPersonnelMember", fields: [personnelMemberId], references: [id], onDelete: SetNull)
 }
 
 model Role {
@@ -176,6 +192,7 @@ model Station {
   personnelMembers       PersonnelMember[]
   personnelHistory       PersonnelStationHistory[]
   personnelHourEntries   PersonnelHourEntry[]
+  guards                  Guard[]
 
   @@index([isActive, sortOrder])
 }
@@ -346,8 +363,10 @@ model PersonnelMember {
   assignmentHistory PersonnelAssignmentHistory[]
   stationHistory    PersonnelStationHistory[]
   statusHistory     PersonnelStatusHistory[]
-  hourEntries       PersonnelHourEntry[]
-  user              User? @relation("UserPersonnelMember")
+  hourEntries           PersonnelHourEntry[]
+  guardResponsibilities Guard[]            @relation("GuardResponsible")
+  guardAssignments      GuardAssignment[]
+  user                  User?              @relation("UserPersonnelMember")
 
   @@unique([codeYear, codeSequence])
   @@index([status, lastNames, firstNames])
@@ -449,15 +468,67 @@ model PersonnelHourEntry {
   minutes     Int
   occurredAt  DateTime
   confirmedAt DateTime?
-  stationId   String?
-  notes       String?               @db.Text
-  createdAt   DateTime              @default(now())
+  stationId        String?
+  guardAssignmentId String?               @unique
+  notes            String?               @db.Text
+  createdAt        DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
 
-  member  PersonnelMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  station Station?         @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  member          PersonnelMember  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  station         Station?          @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  guardAssignment GuardAssignment? @relation("GuardAssignmentHour", fields: [guardAssignmentId], references: [id], onDelete: Cascade)
 
   @@index([memberId, category, occurredAt])
   @@index([stationId, occurredAt])
   @@index([confirmedAt])
+}
+
+
+model Guard {
+  id                  String      @id @default(cuid())
+  stationId           String
+  startsAt            DateTime
+  endsAt              DateTime
+  status              GuardStatus @default(PLANNED)
+  responsibleMemberId String?
+  notes               String?     @db.Text
+  cancellationReason  String?     @db.Text
+  cancelledAt         DateTime?
+  createdByUserId     String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  station           Station          @relation(fields: [stationId], references: [id], onDelete: Restrict)
+  responsibleMember PersonnelMember? @relation("GuardResponsible", fields: [responsibleMemberId], references: [id], onDelete: Restrict)
+  createdBy         User             @relation("GuardCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  assignments       GuardAssignment[]
+
+  @@index([stationId, startsAt])
+  @@index([status, startsAt])
+  @@index([responsibleMemberId])
+  @@index([createdByUserId])
+}
+
+model GuardAssignment {
+  id               String                @id @default(cuid())
+  guardId          String
+  memberId         String
+  attendanceStatus GuardAttendanceStatus @default(PENDING)
+  actualStartsAt   DateTime?
+  actualEndsAt     DateTime?
+  notes            String?               @db.Text
+  replacementOfId  String?               @unique
+  replacementReason String?              @db.Text
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  guard         Guard             @relation(fields: [guardId], references: [id], onDelete: Cascade)
+  member        PersonnelMember   @relation(fields: [memberId], references: [id], onDelete: Restrict)
+  replacementOf GuardAssignment?  @relation("GuardReplacement", fields: [replacementOfId], references: [id], onDelete: Restrict)
+  replacements  GuardAssignment[] @relation("GuardReplacement")
+  hourEntry     PersonnelHourEntry? @relation("GuardAssignmentHour")
+
+  @@unique([guardId, memberId])
+  @@index([guardId, attendanceStatus])
+  @@index([memberId])
 }

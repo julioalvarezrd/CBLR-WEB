@@ -4,6 +4,7 @@ export type ModuleStat = {
   label: string;
   value: string | number;
   description?: string;
+  tone?: "default" | "info" | "success" | "danger";
 };
 
 type ModuleHeaderProps = {
@@ -15,10 +16,19 @@ type ModuleHeaderProps = {
 };
 
 function getStatsGridClass(count: number): string {
-  if (count >= 4) return "sm:grid-cols-2 xl:grid-cols-4";
+  if (count >= 6) return "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6";
+  if (count === 5) return "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5";
+  if (count === 4) return "sm:grid-cols-2 xl:grid-cols-4";
   if (count === 3) return "sm:grid-cols-3";
   if (count === 2) return "sm:grid-cols-2";
   return "grid-cols-1";
+}
+
+function getStatValueClass(tone: ModuleStat["tone"]): string {
+  if (tone === "info") return "text-blue-700 dark:text-blue-400";
+  if (tone === "success") return "text-emerald-700 dark:text-emerald-400";
+  if (tone === "danger") return "text-red-700 dark:text-red-400";
+  return "text-slate-950 dark:text-white";
 }
 
 export function ModuleHeader({ eyebrow, title, description, action, stats }: ModuleHeaderProps) {
@@ -38,7 +48,7 @@ export function ModuleHeader({ eyebrow, title, description, action, stats }: Mod
           {stats.map((stat) => (
             <div key={stat.label} className="min-w-0 bg-white px-5 py-4 dark:bg-slate-900 sm:px-6">
               <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{stat.label}</p>
-              <p className="mt-1.5 break-words text-xl font-bold text-slate-950 dark:text-white">{stat.value}</p>
+              <p className={"mt-1.5 break-words text-xl font-bold " + getStatValueClass(stat.tone)}>{stat.value}</p>
               {stat.description ? <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{stat.description}</p> : null}
             </div>
           ))}

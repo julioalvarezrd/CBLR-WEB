@@ -1,5 +1,6 @@
 export const PERMISSION_MODULE_LABELS = {
   personal: "Personal",
+  guardias: "Guardias",
   incidencias: "Incidencias",
   operativos: "Operativos",
   vehiculos: "Vehículos",
@@ -16,6 +17,11 @@ export const PERMISSIONS = [
   { key: "personal.create", module: "personal", action: "create", label: "Crear", description: "Crear registros del módulo de Personal.", critical: false },
   { key: "personal.edit", module: "personal", action: "edit", label: "Editar", description: "Modificar registros del módulo de Personal.", critical: false },
   { key: "personal.delete", module: "personal", action: "delete", label: "Eliminar", description: "Eliminar registros del módulo de Personal.", critical: false },
+  { key: "guardias.view", module: "guardias", action: "view", label: "Ver", description: "Consultar guardias, asistencia y horas confirmadas.", critical: false },
+  { key: "guardias.create", module: "guardias", action: "create", label: "Crear", description: "Crear y planificar guardias del personal fijo.", critical: false },
+  { key: "guardias.edit", module: "guardias", action: "edit", label: "Editar", description: "Modificar guardias y administrar sus miembros.", critical: false },
+  { key: "guardias.attendance", module: "guardias", action: "attendance", label: "Asistencia", description: "Registrar asistencia, horarios reales y reemplazos en guardias.", critical: false },
+  { key: "guardias.cancel", module: "guardias", action: "cancel", label: "Cancelar", description: "Cancelar guardias planificadas o activas.", critical: true },
   { key: "incidencias.view", module: "incidencias", action: "view", label: "Ver", description: "Consultar incidencias autorizadas.", critical: false },
   { key: "incidencias.create", module: "incidencias", action: "create", label: "Crear", description: "Crear incidencias.", critical: false },
   { key: "incidencias.edit", module: "incidencias", action: "edit", label: "Editar", description: "Modificar incidencias.", critical: false },
